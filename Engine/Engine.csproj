@@ -20,6 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSCore" Version="1.2.1.2" />
     <PackageReference Include="GlmNet" Version="0.7.0" />
     <PackageReference Include="ImGui.NET" Version="1.78.0" />
     <PackageReference Include="OpenTK" Version="4.5.0" />

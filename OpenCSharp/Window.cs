@@ -9,6 +9,10 @@ using System.Collections.Generic;
 using GlmNet;
 using Engine;
 using Engine.resources;
+using Engine.audio;
+using CSCore.CoreAudioAPI;
+using System.Collections.ObjectModel;
+
 namespace OpenCSharp
 {
 
@@ -21,7 +25,11 @@ namespace OpenCSharp
         static private readonly ResourceManager<uint, SubTexture> m_subTexs = new ResourceManager<uint, SubTexture>();
         static private readonly ResourceManager<string, Texture> m_textures = new ResourceManager<string, Texture>();
         static private readonly ResourceManager<string, Text> m_fonts = new ResourceManager<string, Text>();
-        unsafe private List<Entity> m_entities;
+        static private readonly ResourceManager<string, SoundPlayer> m_snds = new ResourceManager<string, SoundPlayer>();
+
+        private readonly unsafe List<Entity> m_entities;
+
+        static private readonly SoundPlayer mPlayer = new SoundPlayer();
 
         private readonly ParticlesSystem emiter;
         private ParticleProps props;
@@ -30,6 +38,10 @@ namespace OpenCSharp
         {
             m_textures.AddResouce("test", new Texture("tex/Test.png"));
             m_fonts.AddResouce("FreeSans", new Text("fonts/FreeSans.ttf"));
+            //Play on My headphone, the default is 0
+            mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[1]);
+            m_snds.AddResouce("music", mPlayer);
+
         }
 
         public Window(GameWindowSettings gameWindowSettings,NativeWindowSettings nativeWindowSettings)
@@ -46,6 +58,8 @@ namespace OpenCSharp
             props = ParticleProps.Effect2;
             props.Gravity = 0.0f;
             emiter = new ParticlesSystem();
+            
+
         }
 
         static Window() { camera = new OrthographicCameraController(1, true); }
@@ -89,6 +103,9 @@ namespace OpenCSharp
             {
                 e.OnAttach();
             }
+
+            m_snds.GetResource("music").Play();
+
             base.OnLoad();
         }
 
@@ -104,7 +121,8 @@ namespace OpenCSharp
                 props.Position.y = camera.GetCamera().GetPosition().y - (MousePosition.Y - ScreenSize.y);
                 props.Position.x = MousePosition.X;
                 emiter.Emit(props);
-            }
+                m_snds.GetResource("music").Play();
+            }else m_snds.GetResource("music").Pause();
 
             camera.OnUpdate(KeyboardState, e.Time);
             
@@ -179,6 +197,7 @@ namespace OpenCSharp
         protected override void OnUnload()
         {
             shader.Dispose();
+            mPlayer.Dispose();
             Render2D.ShutDown();
             TextRender.ShutDown();
             base.OnUnload();
