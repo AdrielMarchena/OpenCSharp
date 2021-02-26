@@ -84,7 +84,7 @@ namespace Engine.audio
             }
         }
 
-        unsafe public void Open(string filename, MMDevice device)
+        public void Open(string filename, MMDevice device)
         {
             CleanupPlayback();
 

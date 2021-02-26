@@ -2,6 +2,7 @@
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 using Engine.render;
 using Engine.camera;
 using System;
@@ -10,8 +11,6 @@ using GlmNet;
 using Engine;
 using Engine.resources;
 using Engine.audio;
-using CSCore.CoreAudioAPI;
-using System.Collections.ObjectModel;
 
 namespace OpenCSharp
 {
@@ -106,6 +105,7 @@ namespace OpenCSharp
 
             m_snds.GetResource("music").Play();
 
+
             base.OnLoad();
         }
 
@@ -165,13 +165,18 @@ namespace OpenCSharp
                     en.OnRender(args);
                 PlayerPos = en.Position;
             }
-
+            
             double Distance = Math.Sqrt(Math.Pow(PlayerPos.x - 50.0f,2) + Math.Pow(50.0f - PlayerPos.y,2));
-            m_fonts.GetResource("FreeSans").RenderText("distance is: " + Distance.ToString(), 300.0f, 375.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
+            double fps = RenderTime + UpdateTime / 2 * 1000;
+
+            float normColorValue = (float)MathHelper.Lerp(0.0f, 255.0f, Distance);
+
+            float ccolor = 1 / normColorValue;
+
+            m_fonts.GetResource("FreeSans").RenderText("distance is: " + Distance.ToString(), 300.0f, 375.0f, 0.5f, new vec3( ccolor, ccolor,ccolor));
             m_fonts.GetResource("FreeSans").RenderText("Time Elapsed: " + args.Time, 50.0f, ScreenSize.y - 50.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
-            m_fonts.GetResource("FreeSans").RenderText("FPS: " + (1000.0f / args.Time), 50.0f, ScreenSize.y - 100.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
-
-
+            m_fonts.GetResource("FreeSans").RenderText("FPS: " + fps, 50.0f, ScreenSize.y - 100.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
+            
             emiter.OnRender();
 
             Render2D.EndBatch();

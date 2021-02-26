@@ -16,6 +16,10 @@ namespace OpenCSharp
 
             using (var window = new Window(GameWindowSettings.Default, nativeWindowSettings))
             {
+                double fps = 60;
+                window.VSync = OpenTK.Windowing.Common.VSyncMode.Off;
+                window.UpdateFrequency = fps;
+                window.RenderFrequency = fps;
                 window.Run();
             }
         }
