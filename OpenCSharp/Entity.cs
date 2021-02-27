@@ -4,6 +4,14 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using Engine.render;
 namespace OpenCSharp
 {
+    public enum MobStates : byte
+    {
+        ALIVE = 0,
+        DEAD,
+        FALLING,
+        ON_GROUND
+    }
+
     public class Entity
     {
         public vec2 Position;
@@ -33,12 +41,15 @@ namespace OpenCSharp
     public class Mob : Entity 
     {
         protected vec2 Velocity;
-        protected float Life;
+        private float SpawnLife { get; }
+        public float Life { get; protected set; }
         protected readonly Texture m_texture;
+        public MobStates state { get; protected set; }
 
-        public Mob(Texture texture)
+        public Mob(Texture texture, float spawnLife = 30)
         {
             m_texture = texture;
+            SpawnLife = spawnLife;
         }
 
         public override void OnAttach()
@@ -53,5 +64,27 @@ namespace OpenCSharp
         {
             base.OnRender(args);
         }
+
+        public virtual void Die()
+        {
+            Life = 0;
+            state = MobStates.DEAD;
+            DrawIt = false;
+            UpdateIt = false;
+        }
+        public virtual void Spawn()
+        {
+            Life = SpawnLife;
+            state = MobStates.ALIVE;
+            DrawIt = true;
+            UpdateIt = true;
+        }
+
+        public virtual void Damage(float damage)
+        {
+            if (Life > 0)
+                Life -= damage;
+        }
+
     }
 }

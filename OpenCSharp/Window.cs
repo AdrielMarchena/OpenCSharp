@@ -46,7 +46,6 @@ namespace OpenCSharp
         public Window(GameWindowSettings gameWindowSettings,NativeWindowSettings nativeWindowSettings)
                : base(gameWindowSettings,nativeWindowSettings)
         {
-
             Load_resources();
             m_entities = new List<Entity>();
             
@@ -57,8 +56,6 @@ namespace OpenCSharp
             props = ParticleProps.Effect2;
             props.Gravity = 0.0f;
             emiter = new ParticlesSystem();
-            
-
         }
 
         static Window() { camera = new OrthographicCameraController(1, true); }
@@ -169,11 +166,7 @@ namespace OpenCSharp
             double Distance = Math.Sqrt(Math.Pow(PlayerPos.x - 50.0f,2) + Math.Pow(50.0f - PlayerPos.y,2));
             double fps = RenderTime + UpdateTime / 2 * 1000;
 
-            float normColorValue = (float)MathHelper.Lerp(0.0f, 255.0f, Distance);
-
-            float ccolor = 1 / normColorValue;
-
-            m_fonts.GetResource("FreeSans").RenderText("distance is: " + Distance.ToString(), 300.0f, 375.0f, 0.5f, new vec3( ccolor, ccolor,ccolor));
+            m_fonts.GetResource("FreeSans").RenderText("distance is: " + Distance.ToString(), 300.0f, 375.0f, 0.5f, new vec3( 0.8f, 0.8f,0.9f));
             m_fonts.GetResource("FreeSans").RenderText("Time Elapsed: " + args.Time, 50.0f, ScreenSize.y - 50.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
             m_fonts.GetResource("FreeSans").RenderText("FPS: " + fps, 50.0f, ScreenSize.y - 100.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
             
