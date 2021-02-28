@@ -8,16 +8,16 @@ namespace Engine.resources
     /// </summary>
     /// <typeparam name="K"> Key </typeparam>
     /// <typeparam name="T"> Type </typeparam>
-    public class ResourceManager<K,T>
+    public class ResourceManager<K, T>
     {
         private Dictionary<K, T> m_resource_list;
-        
+
         public ResourceManager()
         {
             m_resource_list = new Dictionary<K, T>();
         }
 
-        public void AddResouce(K key,T resource)
+        public void AddResource(K key, T resource)
         {
             m_resource_list[key] = resource;
         }
@@ -37,6 +37,12 @@ namespace Engine.resources
             if (m_resource_list.ContainsKey(key))
                 return m_resource_list[key];
             throw new Exception("No resource whith < " + key + " > key was found!");
+        }
+
+        public T this[K key]
+        {
+            get { return m_resource_list[key]; }
+            set { m_resource_list[key] = value;  }
         }
 
         public void RemoveResource(K key)
