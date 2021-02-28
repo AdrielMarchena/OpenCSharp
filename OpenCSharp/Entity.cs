@@ -44,7 +44,7 @@ namespace OpenCSharp
         private float SpawnLife { get; }
         public float Life { get; protected set; }
         protected readonly Texture m_texture;
-        public MobStates state { get; protected set; }
+        public MobStates State { get; protected set; }
 
         public Mob(Texture texture, float spawnLife = 30)
         {
@@ -68,14 +68,14 @@ namespace OpenCSharp
         public virtual void Die()
         {
             Life = 0;
-            state = MobStates.DEAD;
+            State = MobStates.DEAD;
             DrawIt = false;
             UpdateIt = false;
         }
         public virtual void Spawn()
         {
             Life = SpawnLife;
-            state = MobStates.ALIVE;
+            State = MobStates.ALIVE;
             DrawIt = true;
             UpdateIt = true;
         }
