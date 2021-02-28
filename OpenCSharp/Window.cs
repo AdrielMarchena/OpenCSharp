@@ -14,14 +14,27 @@ using Engine.audio;
 
 namespace OpenCSharp
 {
-
+    public enum SubTex : byte
+    {
+        Invalid = 0,
+        Player,
+        Enemy,
+        Item,
+        Ground1,
+        Ground2,
+        Ground3,
+        Wall1,
+        Wall2,
+        Wall3
+    }
     public class Window : GameWindow
+
     {
         private Shader shader;
         public static readonly OrthographicCameraController camera;
         static private vec2 ScreenSize;
 
-        static private readonly ResourceManager<uint, SubTexture> m_subTexs = new ResourceManager<uint, SubTexture>();
+        static private readonly ResourceManager<SubTex, SubTexture> m_subTexs = new ResourceManager<SubTex, SubTexture>();
         static private readonly ResourceManager<string, Texture> m_textures = new ResourceManager<string, Texture>();
         static private readonly ResourceManager<string, Text> m_fonts = new ResourceManager<string, Text>();
         static private readonly ResourceManager<string, SoundPlayer> m_snds = new ResourceManager<string, SoundPlayer>();
@@ -33,26 +46,68 @@ namespace OpenCSharp
         private readonly ParticlesSystem emiter;
         private ParticleProps props;
 
+        static private void montSubText()
+        {
+            var Map = m_textures.GetResource("MapTextures");
+            vec2 ImageSize = new vec2(Map.Width, Map.Height);
+            vec2 SpriteSize = new vec2(64);
+            
+            //Default subtex for invalid itens
+            SubTexture tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(0, 0), new vec2(1,1));
+            m_subTexs[SubTex.Invalid] = tmp;
+            //Get sub texts from the Major tex here
+            int i = 1;
+            for(int r = 3; r >= 0; r--)
+            {
+                
+                for(int c = 0; c <= 3;c++)
+                {
+                    tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(c , r), SpriteSize);
+                    m_subTexs[(SubTex)i] = tmp;
+                    i++;
+                }
+            }
+
+           /*SubTexture tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(0,3), SpriteSize);
+            m_subTexs.AddResouce("player_tex", tmp);
+
+            tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(1,3) ,SpriteSize);
+            m_subTexs.AddResouce("enemy_tex", tmp);
+
+            tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(2, 3), SpriteSize);
+            m_subTexs.AddResouce("item_tex", tmp);
+
+            tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(3, 3), SpriteSize);
+            m_subTexs.AddResouce("ground_tex", tmp);
+
+            tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(0, 2), SpriteSize);
+            m_subTexs.AddResouce("ground2_tex", tmp);
+
+            tmp = SubTexture.CreateFromCoords(Map.textureID, ImageSize, new vec2(1, 2), SpriteSize);
+            m_subTexs.AddResouce("ground3_tex", tmp);*/
+
+        }
+
         static private void Load_resources()
         {
-            m_textures.AddResouce("test", new Texture("tex/Test.png"));
-            m_fonts.AddResouce("FreeSans", new Text("fonts/FreeSans.ttf"));
+            m_textures.AddResource("test", new Texture("tex/Test.png"));
+            m_textures.AddResource("MapTextures", new Texture("tex/Map.png"));
+
+            m_fonts.AddResource("Arial", new Text("fonts/arial.ttf"));
             //Play on My headphone, the default is 0
             mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[1]);
-            m_snds.AddResouce("music", mPlayer);
-
+            m_snds.AddResource("music", mPlayer);
         }
 
         public Window(GameWindowSettings gameWindowSettings,NativeWindowSettings nativeWindowSettings)
                : base(gameWindowSettings,nativeWindowSettings)
         {
             Load_resources();
+            montSubText();
             m_entities = new List<Entity>();
             
             ScreenSize = new vec2(1024.0f, 576.0f);
 
-            var texture = m_textures.GetResource("test");
-            m_subTexs.AddResouce(0,SubTexture.CreateFromCoords(texture.textureID, new vec2(texture.Width, texture.Height), new vec2(1, 0), new vec2(64, 64)));
             props = ParticleProps.Effect2;
             props.Gravity = 0.0f;
             emiter = new ParticlesSystem();
@@ -154,7 +209,24 @@ namespace OpenCSharp
             Render2D.BeginBatch();
             //Draws here
             vec2 PlayerPos = new vec2(1);
-            Render2D.DrawQuad(new vec2(10.0f, 10.0f), new vec2(50.0f, 50.0f), new vec4(0.9f, 0.9f, 0.9f, 1.0f));
+            float pos = 150.0f;
+
+            m_fonts["Arial"].RenderText("Player: ", pos, 80.0f, 0.5f, new vec3(0.8f, 0.8f, 0.9f));
+            Render2D.DrawQuad(new vec2(pos, 10.0f), new vec2(50.0f, 50.0f), m_subTexs[SubTex.Player]);
+            pos += 100.0f;
+
+            m_fonts["Arial"].RenderText("Enemy: ", pos, 80, 0.5f, new vec3(0.8f, 0.8f, 0.9f));
+            Render2D.DrawQuad(new vec2(pos, 10.0f), new vec2(50.0f, 50.0f), m_subTexs[SubTex.Enemy]);
+            pos += 100.0f;
+
+            m_fonts["Arial"].RenderText("Item: ", pos, 80, 0.5f, new vec3(0.8f, 0.8f, 0.9f));
+            Render2D.DrawQuad(new vec2(pos, 10.0f), new vec2(50.0f, 50.0f), m_subTexs[SubTex.Item]);
+            pos += 100.0f;
+
+            m_fonts["Arial"].RenderText("Ground: ", pos , 80, 0.5f, new vec3(0.8f, 0.8f, 0.9f));
+            Render2D.DrawQuad(new vec2(pos, 10.0f), new vec2(50.0f, 50.0f), m_subTexs[SubTex.Ground1]);
+            pos += 100.0f;
+
 
             foreach (Entity en in m_entities)
             {
@@ -166,9 +238,9 @@ namespace OpenCSharp
             double Distance = Math.Sqrt(Math.Pow(PlayerPos.x - 50.0f,2) + Math.Pow(50.0f - PlayerPos.y,2));
             double fps = RenderTime + UpdateTime / 2 * 1000;
 
-            m_fonts.GetResource("FreeSans").RenderText("distance is: " + Distance.ToString(), 300.0f, 375.0f, 0.5f, new vec3( 0.8f, 0.8f,0.9f));
-            m_fonts.GetResource("FreeSans").RenderText("Time Elapsed: " + args.Time, 50.0f, ScreenSize.y - 50.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
-            m_fonts.GetResource("FreeSans").RenderText("FPS: " + fps, 50.0f, ScreenSize.y - 100.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
+            m_fonts.GetResource("Arial").RenderText("distance is: " + Distance.ToString(), 300.0f, 375.0f, 0.5f, new vec3( 0.8f, 0.8f,0.9f));
+            m_fonts.GetResource("Arial").RenderText("Time Elapsed: " + args.Time, 50.0f, ScreenSize.y - 50.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
+            m_fonts.GetResource("Arial").RenderText("FPS: " + fps, 50.0f, ScreenSize.y - 100.0f, 0.5f, new vec3(0.2f, 0.5f, 0.8f));
             
             emiter.OnRender();
 
