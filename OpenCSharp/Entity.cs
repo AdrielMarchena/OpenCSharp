@@ -14,11 +14,18 @@ namespace OpenCSharp
 
     public class Entity
     {
+        public Texture Texture { get; protected set; }
+        public SubTexture STexture { get; protected set; }
         public vec2 Position;
         public vec2 Size;
         public bool DrawIt;
         public bool UpdateIt;
         //protected bool ImGuiIt;
+
+        public Entity(Texture texture) { Texture = texture; }
+        public Entity(SubTexture stexture) { STexture = stexture; }
+
+        public Entity() { }
 
         public virtual void OnAttach()
         {
@@ -41,14 +48,20 @@ namespace OpenCSharp
     public class Mob : Entity 
     {
         protected vec2 Velocity;
+        protected mat3 TilePosition;
         private float SpawnLife { get; }
         public float Life { get; protected set; }
-        protected readonly Texture m_texture;
-        public MobStates State { get; protected set; }
+        public MobStates StateLife { get; protected set; }
+        public MobStates PhysicState { get; protected set; }
 
         public Mob(Texture texture, float spawnLife = 30)
+            :base(texture)
         {
-            m_texture = texture;
+            SpawnLife = spawnLife;
+        }
+        public Mob(SubTexture stexture, float spawnLife = 30)
+            :base(stexture)
+        {
             SpawnLife = spawnLife;
         }
 
@@ -68,22 +81,18 @@ namespace OpenCSharp
         public virtual void Die()
         {
             Life = 0;
-            State = MobStates.DEAD;
-            DrawIt = false;
-            UpdateIt = false;
+            StateLife = MobStates.DEAD;
         }
         public virtual void Spawn()
         {
             Life = SpawnLife;
-            State = MobStates.ALIVE;
+            StateLife = MobStates.ALIVE;
             DrawIt = true;
             UpdateIt = true;
         }
 
         public virtual void Damage(float damage)
         {
-            if (Life > 0)
-                Life -= damage;
         }
 
     }
