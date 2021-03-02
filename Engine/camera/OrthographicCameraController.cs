@@ -13,6 +13,13 @@ namespace Engine.camera
 		private vec2 m_CameraPosition = new vec2( 0.0f, 0.0f );
 		private double m_CameraRotation = 0.0f; //In degrees, in the anti-clockwise direction
 		private double m_CameraTranslationSpeed = 5.0f, m_CameraRotationSpeed = 180.0f;
+		/// <summary>
+		/// <para>X : horizontal min (default: 0.0f)</para>
+		/// <para>Y : horizontal max (default: 100.0f)</para>
+		/// <para>Z : vertical min (default: 0.0f)</para>
+		/// <para>W : vertical max (default: 100.0f)</para>
+		/// </summary>
+		public vec4 m_cameraBounds = new vec4(0.0f, 2.5f, 0.0f, 2.5f);
 
 		public OrthographicCameraController(float aspectRatio, bool rotation = false)
         {
@@ -25,24 +32,37 @@ namespace Engine.camera
         {
 			if (keyboard.IsKeyDown(Keys.A))
 			{
-				m_CameraPosition.x -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-				m_CameraPosition.y -= (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				if (m_CameraPosition.x > m_cameraBounds.x)
+                {
+					m_CameraPosition.x -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y -= (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+
+                }
 			}
 			else if (keyboard.IsKeyDown(Keys.D))
 			{
-				m_CameraPosition.x += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-				m_CameraPosition.y += (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				if(m_CameraPosition.x < m_cameraBounds.y)
+                {
+					m_CameraPosition.x += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y += (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+                }
 			}
 
 			if (keyboard.IsKeyDown(Keys.W))
 			{
-				m_CameraPosition.x += (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-				m_CameraPosition.y += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				if (m_CameraPosition.y < m_cameraBounds.w)
+                {
+					m_CameraPosition.x += (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+                }
 			}
 			else if (keyboard.IsKeyDown(Keys.S))
 			{
-				m_CameraPosition.x -= (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-				m_CameraPosition.y -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				if(m_CameraPosition.y > m_cameraBounds.z)
+                {
+					m_CameraPosition.x -= (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+                }
 			}
 
 			if (m_Rotation)
