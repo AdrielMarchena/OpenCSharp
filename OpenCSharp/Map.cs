@@ -19,7 +19,7 @@ namespace OpenCSharp
         public TileType Type;
     }
 
-    public class Map
+    unsafe public class Map
     {
         public vec2 PlayerInitPos { get; protected set; }
         public vec2 MapSize;

@@ -2,13 +2,21 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Engine.render;
+using System;
+
 namespace OpenCSharp
 {
     public class PlayerTest : Mob
     {
+		protected readonly ParticlesSystem m_particleEmiter;
+		protected ParticleProps m_particleProps;
 
-		private readonly ParticlesSystem m_particleEmiter;
-		private ParticleProps m_particleProps;
+		protected Entity Line;
+		protected double LineAngle;
+		public float StopVelocity { get; protected set; } = 10.0f;
+		public float AcVelocity { get; protected set; } = 25.0f;
+		public float TermVelocity { get; protected set; } = 100.0f;
+		public float NegTermVelocity { get; protected set; } = -100.0f;
 
 		public PlayerTest(Texture texture) :base(texture) 
 		{
@@ -25,6 +33,9 @@ namespace OpenCSharp
 			m_particleProps = ParticleProps.Effect2;
 			m_particleProps.LifeTime = 2.0f;
 			m_particleProps.SizeBegin = 2.0f;
+
+			Line = new Entity();
+			Line.Size = new vec2(1);
 			base.OnAttach();
         }
 
@@ -32,40 +43,40 @@ namespace OpenCSharp
         {
 			float deltaTime = (float)e.Time;
 			if (keyboard.IsKeyDown(Keys.Right))
-				if (Velocity.x < 100.0f)
-					Velocity.x += 25.0f * deltaTime;
+				if (Velocity.x < TermVelocity)
+					Velocity.x += AcVelocity * deltaTime;
 			if (keyboard.IsKeyDown(Keys.Left))
-				if (Velocity.x > -100.0f)
-					Velocity.x -= 25.0f * deltaTime;
+				if (Velocity.x > NegTermVelocity)
+					Velocity.x -= AcVelocity * deltaTime;
 			if (keyboard.IsKeyDown(Keys.Up))
-				if (Velocity.y < 100.0f)
-					Velocity.y += 25.0f * deltaTime;
+				if (Velocity.y < TermVelocity)
+					Velocity.y += AcVelocity * deltaTime;
 			if (keyboard.IsKeyDown(Keys.Down))
-				if (Velocity.y > -100.0f)
-					Velocity.y -= 25.0f * deltaTime;
+				if (Velocity.y > NegTermVelocity)
+					Velocity.y -= AcVelocity * deltaTime;
 
 			if (Velocity.x > 0.0f)
 			{
-				Velocity.x -= 5.0f * deltaTime;
+				Velocity.x -= StopVelocity * deltaTime;
 				if (Velocity.x < 0)
 					Velocity.x = 0.0f;
 			}
 
 			if (Velocity.x < 0.0f)
 			{
-				Velocity.x += 5.0f * deltaTime;
+				Velocity.x += StopVelocity * deltaTime;
 				if (Velocity.x > 0)
 					Velocity.x = 0.0f;
 			}
 			if (Velocity.y > 0.0f)
 			{
-				Velocity.y -= 5.0f * deltaTime;
+				Velocity.y -= StopVelocity * deltaTime;
 				if (Velocity.y <= 0)
 					Velocity.y = 0.0f;
 			}
 			if (Velocity.y < 0.0f)
 			{
-				Velocity.y += 5.0f * deltaTime;
+				Velocity.y += StopVelocity * deltaTime;
 				if (Velocity.y >= 0)
 					Velocity.y = 0.0f;
 			}
@@ -75,12 +86,31 @@ namespace OpenCSharp
 			for(int i = 0; i < 5; i++)
 				m_particleEmiter.Emit(m_particleProps);
 			m_particleEmiter.OnUpdate((float)e.Time);
+
+
+			/*if(Window.mouse.IsButtonDown(MouseButton.Button1))
+            {
+				Line.Position = Position;
+				vec2 mpos = new vec2(Window.mouse.Position.X, Window.mouse.Position.X);
+				double Distance = Math.Sqrt(Math.Pow(mpos.x - Line.Position.x,2) + Math.Pow(Line.Position.y - mpos.y, 2));
+
+				double delta_x = mpos.x - Line.Position.x;
+				double delta_y = mpos.y - Line.Position.y;
+				LineAngle = (float)Math.Atan2(delta_y, delta_x);
+
+				//LineAngle = Math.Atan2(mpos.y - Line.Position.y, mpos.x - Line.Position.x) * 180 / Math.PI;
+
+				Line.Size.x = 1;
+				Line.Size.y = (float)Distance;
+			}*/
+			
 			base.OnUpdate(keyboard,e);
         }
 		public override void OnRender(FrameEventArgs args)
         {
 			m_particleEmiter.OnRender();
-			Render2D.DrawQuad(Position, Size ,m_texture.textureID);
+
+			Render2D.DrawQuad(Position, Size ,Texture.textureID);
 
             base.OnRender(args);
         }

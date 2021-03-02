@@ -34,7 +34,8 @@ namespace OpenCSharp
     {
         Running,
         Pause,
-        Exit
+        Exit,
+        FreeCamera
     }
 
     public class Window : GameWindow
@@ -49,27 +50,33 @@ namespace OpenCSharp
         /// It's updated when the screen is resized
         /// </summary>
         static public vec2 ScreenSize { get; protected set; }
+        /// <summary>
+        /// Mouse event, is updated each frame
+        /// </summary>
         static public MouseState mouse { get; protected set; }
+        /// <summary>
+        /// Keyboard events, is updated each frame
+        /// </summary>
         static public KeyboardState keyboard { get; protected set; }
 
-        /// <summary>
-        /// Static SubTextures from a Atlas Texture
-        /// </summary>
         static public readonly ResourceManager<SubTex, SubTexture> m_subTexs = new ResourceManager<SubTex, SubTexture>();
         static public readonly ResourceManager<string, Texture> m_textures = new ResourceManager<string, Texture>();
         static public readonly ResourceManager<string, Text> m_fonts = new ResourceManager<string, Text>();
         static public readonly ResourceManager<string, SoundPlayer> m_snds = new ResourceManager<string, SoundPlayer>();
+        static public readonly ResourceManager<string, Map> m_maps = new ResourceManager<string, Map>();
+        static public GameState gameState;
         /// <summary>
         /// Entity list,
         /// </summary>
         private readonly List<Entity> m_entities;
-
+        /// <summary>
+        /// Player instance
+        /// </summary>
         static private readonly SoundPlayer mPlayer = new SoundPlayer();
-
-        private readonly ParticlesSystem emiter;
-        private ParticleProps props;
-
-        private Map map;
+        /// <summary>
+        /// The current Map
+        /// </summary>
+        private Map currentMap;
 
         /// <summary>
         /// Create all those SubTex from the TexMap
@@ -128,13 +135,25 @@ namespace OpenCSharp
                             "GAAGGAAAAGGAAAAAAAAG" +
                             "WGGGGGGGGGGGGGGGGGGG";
 
-            map = new Map(20, 10, layout);
+            m_maps["1-1"] = new Map(20, 10, layout);
+            currentMap = m_maps["1-1"];
+
+            string layout2 = "AAAAAAAAAAAAAAAAAAAA" +
+                             "AAAAAAAAAAAAAAAAAAAA" +
+                             "AAAAAAAAAAAAAAAAAAAA" +
+                             "AAAAAAAAAAAAAAAAAAAW" +
+                             "WAAAAAAWWWWAAAAAAAAA" +
+                             "WAAAAAAAAAAAAAAAAAAA" +
+                             "GGGGGGGGAAAAAAAAAAAA" +
+                             "GGGGGGGGGGGGGGAAAGGG" +
+                             "GGGGGGGGAAAGGGGGGGGG" +
+                             "GGGGGGGGGGGGGGGGGGGG";
+
+            m_maps["1-2"] = new Map(20, 10, layout2);
+
+            gameState = GameState.Pause;
 
             ScreenSize = new vec2(1024.0f, 576.0f);
-
-            props = ParticleProps.Effect2;
-            props.Gravity = 0.0f;
-            emiter = new ParticlesSystem();
         }
 
         static Window() { camera = new OrthographicCameraController(1, true); }
@@ -179,8 +198,8 @@ namespace OpenCSharp
                 e.OnAttach();
             }
 
-            m_snds.GetResource("music").Play();
-
+            //m_snds.GetResource("music").Play();
+            gameState = GameState.Running;
             base.OnLoad();
         }
 
@@ -200,15 +219,19 @@ namespace OpenCSharp
 
             TextRender.SetTransform(glm.ortho(0, ScreenSize.x, 0, ScreenSize.y, -1.0f, 100.0f).to_array());
 
-            foreach (Entity en in m_entities)
-            {
-                if(en.UpdateIt)
-                    en.OnUpdate(KeyboardState,e);
-            }
+            if(gameState != GameState.Exit || gameState != GameState.Pause)
+                foreach (Entity en in m_entities)
+                {
+                    if(en.UpdateIt)
+                        en.OnUpdate(KeyboardState,e);
+                }
 
-            emiter.OnUpdate((float)e.Time);
+            if (keyboard.IsKeyDown(Keys.C))
+                currentMap = m_maps["1-2"];
+            if (keyboard.IsKeyDown(Keys.U))
+                Console.WriteLine("Camera pos X: " + camera.GetCamera().GetPosition().x + " Y: " + camera.GetCamera().GetPosition().y);
 
-            base.OnUpdateFrame(e);
+                base.OnUpdateFrame(e);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -219,7 +242,16 @@ namespace OpenCSharp
 
             //Draws here
 
-            map.Draw();
+            vec4[] colors = new vec4[4] {
+                 new vec4(1.0f),
+                 new vec4(0.2f,0.5f,0.8f,1.0f),
+                 new vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                 new vec4(0.8f, 0.5f, 0.2f, 1.0f)
+                };
+
+
+            currentMap.Draw();
+            Render2D.DrawQuad(new vec2(ScreenSize.x / 2, ScreenSize.y / 2), new vec2(50.0f), colors);
             foreach (Entity en in m_entities)
             {
                 if (en.DrawIt)
@@ -227,8 +259,6 @@ namespace OpenCSharp
             }
             //vec2 PlayerPos = new vec2(1);
             //double Distance = Math.Sqrt(Math.Pow(PlayerPos.x - 50.0f,2) + Math.Pow(50.0f - PlayerPos.y,2));
-
-            emiter.OnRender();
 
             Render2D.EndBatch();
             Render2D.Flush();
