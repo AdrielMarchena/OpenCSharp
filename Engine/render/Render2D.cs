@@ -4,6 +4,9 @@ using OpenTK.Graphics.OpenGL;
 using GlmNet;
 namespace Engine.render
 {
+    /// <summary>
+    /// Render2D class, use to render quads (Call Render2D.Init() somewhere First)
+    /// </summary>
     unsafe public class Render2D
     {
         private const Int32 MaxQuadCount = 2000;
@@ -15,7 +18,6 @@ namespace Engine.render
         static private Int32 QuadVB = 0;
         static private Int32 QuadIB = 0;
         static private Int32 WhiteTexture = 0;
-        static private Int32 whiteTextureSlot = 0;
         static private Int32 IndexCount = 0;
         static private Vertex[] QuadBuffer;
         static private Int32 QuadBufferPtr = 0;
@@ -38,6 +40,10 @@ namespace Engine.render
         }
 
         private Render2D() { }
+
+        /// <summary>
+        /// Prepare a bunch of resources needed
+        /// </summary>
         static public void Init() 
         {
             System.Console.WriteLine("Max texture units: " + MaxTextures);
@@ -104,6 +110,10 @@ namespace Engine.render
                 TextureSlots[i] = 0;
         
         }
+
+        /// <summary>
+        /// Dispose things and ShutDown the Render2D
+        /// </summary>
         static public void ShutDown()
         {
             GL.DeleteVertexArray(QuadVA);
@@ -112,16 +122,30 @@ namespace Engine.render
 
             GL.DeleteTexture(WhiteTexture);
         }
+
+        /// <summary>
+        /// Begin a new Batch
+        /// </summary>
         static public void BeginBatch()
         {
             QuadBufferPtr = 0;
         }
+
+        /// <summary>
+        /// End the Batch (call it before Flush)
+        /// </summary>
         static public void EndBatch()
         {
             IntPtr size = (IntPtr)(QuadBufferPtr * sizeof(Vertex));
             GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVB);
             GL.BufferSubData(BufferTarget.ArrayBuffer, (IntPtr)0, size, QuadBuffer);
         }
+        
+        /// <summary>
+        /// Switch case to get the enum TextureUnit
+        /// </summary>
+        /// <param name="index">Texture Unit number</param>
+        /// <returns></returns>
         static private TextureUnit SwitchTexUnit(UInt32 index)
         {
             switch(index)
@@ -161,6 +185,10 @@ namespace Engine.render
                 default: return TextureUnit.Texture0;
             }
         }
+
+        /// <summary>
+        /// Draws all Quads prepared
+        /// </summary>
         static public void Flush()
         {
             for (UInt32 i = 0; i < TextureSlotIndex; i++)
@@ -176,6 +204,14 @@ namespace Engine.render
             TextureSlotIndex = 1;
         }
 
+        /// <summary>
+        /// Fill vertices
+        /// </summary>
+        /// <param name="position">Position left bottom</param>
+        /// <param name="size">Quad size</param>
+        /// <param name="color">Quad color</param>
+        /// <param name="texCoords">Quad Tex Coords</param>
+        /// <param name="texIndex">Quad Tex index</param>
         static private void FillVertices(vec2 position, vec2 size, vec4 color,vec2[] texCoords,float texIndex)
         {
             QuadBuffer[QuadBufferPtr].Position = new vec3(position.x, position.y, 0.0f);
@@ -203,6 +239,48 @@ namespace Engine.render
             QuadBufferPtr++;
         }
 
+        /// <summary>
+        /// Fill vertices
+        /// </summary>
+        /// <param name="position">Position left bottom</param>
+        /// <param name="size">Quad size</param>
+        /// <param name="color">Four colors to degradee</param>
+        /// <param name="texCoords">Quad Tex Coords</param>
+        /// <param name="texIndex">Quad Tex index</param>
+        static private void FillVertices(vec2 position, vec2 size, vec4[] color, vec2[] texCoords, float texIndex)
+        {
+            QuadBuffer[QuadBufferPtr].Position = new vec3(position.x, position.y, 0.0f);
+            QuadBuffer[QuadBufferPtr].Color = color[0];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[0];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+
+            QuadBuffer[QuadBufferPtr].Position = new vec3(position.x + size.x, position.y, 0.0f);
+            QuadBuffer[QuadBufferPtr].Color = color[1];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[1];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+
+            QuadBuffer[QuadBufferPtr].Position = new vec3(position.x + size.x, position.y + size.y, 0.0f);
+            QuadBuffer[QuadBufferPtr].Color = color[2];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[2];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+
+            QuadBuffer[QuadBufferPtr].Position = new vec3(position.x, position.y + size.y, 0.0f);
+            QuadBuffer[QuadBufferPtr].Color = color[3];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[3];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+        }
+
+        /// <summary>
+        /// Fill vertices
+        /// </summary>
+        /// <param name="position">The already calculated vertices</param>
+        /// <param name="color">Quad color</param>
+        /// <param name="texCoords">Quad Tex Coords</param>
+        /// <param name="texIndex">Quad Tex index</param>
         static private void FillVertices(vec3[] position, vec4 color, vec2[] texCoords, float texIndex)
         {
             QuadBuffer[QuadBufferPtr].Position = position[0];
@@ -230,6 +308,47 @@ namespace Engine.render
             QuadBufferPtr++;
         }
 
+        /// <summary>
+        /// Fill vertices
+        /// </summary>
+        /// <param name="position">The already calculated vertices</param>
+        /// <param name="color">Four colors to degradee</param>
+        /// <param name="texCoords">Quad Tex Coords</param>
+        /// <param name="texIndex">Quad Tex index</param>
+        static private void FillVertices(vec3[] position, vec4[] color, vec2[] texCoords, float texIndex)
+        {
+            QuadBuffer[QuadBufferPtr].Position = position[0];
+            QuadBuffer[QuadBufferPtr].Color = color[0];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[0];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+
+            QuadBuffer[QuadBufferPtr].Position = position[1];
+            QuadBuffer[QuadBufferPtr].Color = color[1];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[1];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+
+            QuadBuffer[QuadBufferPtr].Position = position[2];
+            QuadBuffer[QuadBufferPtr].Color = color[2];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[2];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+
+            QuadBuffer[QuadBufferPtr].Position = position[3];
+            QuadBuffer[QuadBufferPtr].Color = color[3];
+            QuadBuffer[QuadBufferPtr].TexCoords = texCoords[3];
+            QuadBuffer[QuadBufferPtr].TexIndex = texIndex;
+            QuadBufferPtr++;
+        }
+
+        /// <summary>
+        /// Used to rotate Quad using their vertices
+        /// </summary>
+        /// <param name="vertices">vertices of the quad</param>
+        /// <param name="angle">angle in radians</param>
+        /// <param name="rotationCenter">the rotation center</param>
+        /// <param name="axis">The axis of the rotation</param>
         static private void RotateVertices(ref vec3[] vertices,float angle,vec3 rotationCenter,vec3 axis)
         {
             mat4 translationMatrix = glm.translate(mat4.identity(), rotationCenter - (rotationCenter*2));
@@ -243,6 +362,13 @@ namespace Engine.render
             }
 
         }
+        
+        /// <summary>
+        /// Draw a Quad with a color
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="color">The color of the quad</param>
         static public void DrawQuad(vec2 position, vec2 size, vec4 color)
         {
             if (IndexCount >= MaxIndexCount)
@@ -258,7 +384,38 @@ namespace Engine.render
             FillVertices(position, size, color , TexCoords, textureIndex);
             IndexCount += 6;
         }
-        static public void DrawQuad(vec2 position, vec2 size, float rotation, vec4 color, vec3? axis = null)
+
+        /// <summary>
+        /// Draw a Quad with a degradee color
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="color">The four color to generate a degradee</param>
+        static public void DrawQuad(vec2 position, vec2 size, vec4[] color)
+        {
+            if (IndexCount >= MaxIndexCount)
+            {
+                EndBatch();
+                Flush();
+                BeginBatch();
+            }
+
+            float textureIndex = 0.0f;
+
+            FillVertices(position, size, color, TexCoords, textureIndex);
+            IndexCount += 6;
+        }
+
+        /// <summary>
+        /// Draw a rotated Quad whith a color
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="rotation">Rotation in radians</param>
+        /// <param name="color">The color of the Quad</param>
+        /// <param name="axis">The axis of the rotation (default is z axis)</param>
+        /// <param name="rotatinCenter">The center of the rotation (center si default)</param>
+        static public void DrawQuad(vec2 position, vec2 size, float rotation, vec4 color, vec3? axis = null, vec3 ? rotatinCenter = null)
         {
             if (IndexCount >= MaxIndexCount)
             {
@@ -281,11 +438,68 @@ namespace Engine.render
             else
                 axiss = new vec3(0.0f, 0.0f, 1.0f);
 
-            RotateVertices(ref rectangleVertices, rotation, new vec3(position.x + (size.x / 2), position.y + (size.y / 2), 0.0f),axiss);
+            vec3 rotcent;
+            if (rotatinCenter != null)
+                rotcent = (vec3)rotatinCenter;
+            else
+                rotcent = new vec3(position.x + (size.x / 2), position.y + (size.y / 2), 0.0f);
+
+            RotateVertices(ref rectangleVertices, rotation, rotcent,axiss);
 
             FillVertices(rectangleVertices, color, TexCoords, textureIndex);
             IndexCount += 6;
         }
+
+        /// <summary>
+        /// Draw a rotated Quad whith a degradee color
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="rotation">Rotation in radians</param>
+        /// <param name="color">The four color to generate a degradee</param>
+        /// <param name="axis">The axis of the rotation (default is z axis)</param>
+        /// <param name="rotatinCenter">The center of the rotation (center is default)</param>
+        static public void DrawQuad(vec2 position, vec2 size, float rotation, vec4[] color, vec3? axis = null, vec3? rotatinCenter = null)
+        {
+            if (IndexCount >= MaxIndexCount)
+            {
+                EndBatch();
+                Flush();
+                BeginBatch();
+            }
+
+            float textureIndex = 0.0f;
+
+            vec3[] rectangleVertices = {
+                new vec3(position.x,position.y,0.0f),
+                new vec3(position.x + size.x,position.y,0.0f),
+                new vec3(position.x + size.x,position.y + size.y,0.0f),
+                new vec3(position.x,position.y + size.y,0.0f)
+            };
+            vec3 axiss;
+            if (axis != null)
+                axiss = (vec3)axis;
+            else
+                axiss = new vec3(0.0f, 0.0f, 1.0f);
+
+            vec3 rotcent;
+            if (rotatinCenter != null)
+                rotcent = (vec3)rotatinCenter;
+            else
+                rotcent = new vec3(position.x + (size.x / 2), position.y + (size.y / 2), 0.0f);
+
+            RotateVertices(ref rectangleVertices, rotation, rotcent, axiss);
+
+            FillVertices(rectangleVertices, color, TexCoords, textureIndex);
+            IndexCount += 6;
+        }
+
+        /// <summary>
+        /// Draw a Quad with a texture
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="TextureID">Id of an valid texture, 0 for white default texture</param>
         static public void DrawQuad(vec2 position, vec2 size, Int32 TextureID)
         {
             if (IndexCount >= MaxIndexCount || TextureSlotIndex > MaxTextures - 1)
@@ -316,6 +530,15 @@ namespace Engine.render
             FillVertices(position, size, new vec4(1.0f, 1.0f, 1.0f, 1.0f), TexCoords, textureIndex);
             IndexCount += 6;
         }
+
+        /// <summary>
+        /// Draw a rotate Quad with a texture
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="rotation">The rotation in radians</param>
+        /// <param name="TextureID">Id of an valid texture, 0 for white default texture</param>
+        /// <param name="axis">The axis of the rotation (default is z axis)</param>
         static public void DrawQuad(vec2 position, vec2 size, float rotation ,Int32 TextureID, vec3? axis = null)
         {
             if (IndexCount >= MaxIndexCount || TextureSlotIndex > MaxTextures - 1)
@@ -360,6 +583,13 @@ namespace Engine.render
             FillVertices(rectangleVertices, new vec4(1.0f, 1.0f, 1.0f, 1.0f), TexCoords, textureIndex);
             IndexCount += 6;
         }
+        
+        /// <summary>
+        /// Draws a Quad with a Croped Texture
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="SubTexture">The subtexture to be used</param>
         static public void DrawQuad(vec2 position, vec2 size, SubTexture SubTexture)
         {
             if (IndexCount >= MaxIndexCount || TextureSlotIndex > MaxTextures - 1)
@@ -390,7 +620,17 @@ namespace Engine.render
             FillVertices(position, size, new vec4(1.0f, 1.0f, 1.0f, 1.0f), SubTexture.texCoord, textureIndex);
             IndexCount += 6;
         }
-        static public void DrawQuad(vec2 position, vec2 size, float rotation, SubTexture SubTexture, vec3? axis = null)
+
+        /// <summary>
+        /// Draws a rotated Quad with a Croped Texture
+        /// </summary>
+        /// <param name="position">Is in the left bottom</param>
+        /// <param name="size">The size of the Quad</param>
+        /// <param name="rotation">rotation in radians</param>
+        /// <param name="SubTexture">The subtexture to be used</param>
+        /// <param name="axis">The axis of the rotation (default is z axis)</param>
+        /// <param name="rotatinCenter">The center of the rotation (center is default)</param>
+        static public void DrawQuad(vec2 position, vec2 size, float rotation, SubTexture SubTexture, vec3? axis = null, vec3? rotatinCenter = null)
         {
             if (IndexCount >= MaxIndexCount || TextureSlotIndex > MaxTextures - 1)
             {
@@ -429,7 +669,13 @@ namespace Engine.render
             else
                 axiss = new vec3(0.0f, 0.0f, 1.0f);
 
-            RotateVertices(ref rectangleVertices, rotation, new vec3(position.x + (size.x / 2), position.y + (size.y / 2), 0.0f), axiss);
+            vec3 rotcent;
+            if (rotatinCenter != null)
+                rotcent = (vec3)rotatinCenter;
+            else
+                rotcent = new vec3(position.x + (size.x / 2), position.y + (size.y / 2), 0.0f);
+
+            RotateVertices(ref rectangleVertices, rotation, rotcent, axiss);
 
             FillVertices(rectangleVertices, new vec4(1.0f, 1.0f, 1.0f, 1.0f), SubTexture.texCoord, textureIndex);
             IndexCount += 6;
