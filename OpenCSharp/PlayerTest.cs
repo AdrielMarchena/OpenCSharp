@@ -2,7 +2,6 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Engine.render;
-using System;
 
 namespace OpenCSharp
 {
@@ -10,7 +9,7 @@ namespace OpenCSharp
     {
 		protected readonly ParticlesSystem m_particleEmiter;
 		protected ParticleProps m_particleProps;
-
+		protected SpriteAnim m_animation;
 		protected Entity Line;
 		protected double LineAngle;
 		public float StopVelocity { get; protected set; } = 10.0f;
@@ -22,6 +21,30 @@ namespace OpenCSharp
 		{
 			m_particleEmiter = new ParticlesSystem();
 			m_particleProps = new ParticleProps();
+
+			string[] names =
+			{
+				"player_idle_animation"
+			};
+
+            SpriteAnimProp prop = new SpriteAnimProp
+            {
+                threshold = 5.0f,
+                m_sprites = new SubTexture[5]
+            };
+
+            for (int i = 0; i < prop.m_sprites.Length; i++)
+            {
+				prop.m_sprites[i] = Window.m_subTexs[(SubTex)i+1];
+            }
+
+			SpriteAnimProp[] props =
+			{
+				prop
+			};
+
+			m_animation = new SpriteAnim(SpriteAnim.CreateSpriteDict(names, props));
+			m_animation.SetAnim("player_idle_animation");
 		}
 		public override void OnAttach()
         {
@@ -87,6 +110,10 @@ namespace OpenCSharp
 				m_particleEmiter.Emit(m_particleProps);
 			m_particleEmiter.OnUpdate((float)e.Time);
 
+			if (Position.x >= Window.screenSize.x / 2)
+				Window.camera.GetCamera().SetPosition(new vec3(Position/ 1000,0.0f));
+			if (Position.y >= Window.screenSize.y / 2)
+				Window.camera.GetCamera().SetPosition(new vec3(Position / 1000, 0.0f));
 
 			/*if(Window.mouse.IsButtonDown(MouseButton.Button1))
             {
@@ -103,14 +130,17 @@ namespace OpenCSharp
 				Line.Size.x = 1;
 				Line.Size.y = (float)Distance;
 			}*/
-			
+
 			base.OnUpdate(keyboard,e);
         }
 		public override void OnRender(FrameEventArgs args)
         {
+			
 			m_particleEmiter.OnRender();
 
-			Render2D.DrawQuad(Position, Size ,Texture.textureID);
+			var st = m_animation.RunAnim((float)args.Time,0.5f);
+			if(st != null)
+				Render2D.DrawQuad(Position, Size ,st);
 
             base.OnRender(args);
         }

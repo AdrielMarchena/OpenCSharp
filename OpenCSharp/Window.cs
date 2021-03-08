@@ -1,6 +1,7 @@
 ﻿using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 using Engine.render;
 using Engine.camera;
@@ -14,7 +15,7 @@ using Engine.audio;
 namespace OpenCSharp
 {
     /// <summary>
-    /// Index for Subtextures(Yes, this is pretty static i know)
+    /// Index for Subtextures (strange i know)
     /// </summary>
     public enum SubTex : byte
     {
@@ -42,18 +43,22 @@ namespace OpenCSharp
 
     {
         private Shader shader;
+       
         /// <summary>
         /// Global camera
         /// </summary>
         public static readonly OrthographicCameraController camera;
+        
         /// <summary>
         /// It's updated when the screen is resized
         /// </summary>
-        static public vec2 ScreenSize { get; protected set; }
+        static public vec2 screenSize { get; protected set; }
+        
         /// <summary>
         /// Mouse event, is updated each frame
         /// </summary>
         static public MouseState mouse { get; protected set; }
+        
         /// <summary>
         /// Keyboard events, is updated each frame
         /// </summary>
@@ -65,14 +70,17 @@ namespace OpenCSharp
         static public readonly ResourceManager<string, SoundPlayer> m_snds = new ResourceManager<string, SoundPlayer>();
         static public readonly ResourceManager<string, Map> m_maps = new ResourceManager<string, Map>();
         static public GameState gameState;
+        
         /// <summary>
         /// Entity list,
         /// </summary>
         private readonly List<Entity> m_entities;
+        
         /// <summary>
         /// Player instance
         /// </summary>
         static private readonly SoundPlayer mPlayer = new SoundPlayer();
+        
         /// <summary>
         /// The current Map
         /// </summary>
@@ -81,7 +89,7 @@ namespace OpenCSharp
         /// <summary>
         /// Create all those SubTex from the TexMap
         /// </summary>
-        static private void montSubText()
+        static private void MontSubText()
         {
             var MapT = m_textures.GetResource("MapTextures");
             vec2 ImageSize = new vec2(MapT.Width, MapT.Height);
@@ -102,6 +110,7 @@ namespace OpenCSharp
                 }
             }
         }
+        
         /// <summary>
         /// Load Resources Here
         /// </summary>
@@ -121,7 +130,7 @@ namespace OpenCSharp
                : base(gameWindowSettings,nativeWindowSettings)
         {
             Load_resources();
-            montSubText();
+            MontSubText();
             m_entities = new List<Entity>();
 
             string layout = "AAAAAAAAAAAAAAAAAAAA" +
@@ -153,14 +162,22 @@ namespace OpenCSharp
 
             gameState = GameState.Pause;
 
-            ScreenSize = new vec2(1024.0f, 576.0f);
+            screenSize = new vec2(1024.0f, 576.0f);
         }
 
         static Window() { camera = new OrthographicCameraController(1, true); }
 
+        protected override void OnMouseDown(MouseButtonEventArgs e)
+        {
+
+
+
+            base.OnMouseDown(e);
+        }
+
         protected override void OnResize(ResizeEventArgs e)
         {
-            ScreenSize = new vec2(e.Width, e.Height);
+            screenSize = new vec2(e.Width, e.Height);
             GL.Viewport(0, 0, e.Width, e.Height);
             //camera.OnResize(e.Width, e.Height);
             camera.OnResize(1, 1);
@@ -185,11 +202,11 @@ namespace OpenCSharp
             Render2D.Init();
             //TODO: Understand why this is the GetViewProjectionMatrix turn Quad's in Rectangles
             shader.SetUniformMat4("u_ViewProj", camera.GetCamera().GetViewProjectionMatrixArray());
-            shader.SetUniformMat4("u_Transform", glm.ortho(0,ScreenSize.x ,0,ScreenSize.y,-1.0f,100.0f).to_array());
+            shader.SetUniformMat4("u_Transform", glm.ortho(0,screenSize.x ,0,screenSize.y,-1.0f,100.0f).to_array());
             
             TextRender.Init();
             TextRender.SetProjView(mat4.identity().to_array());
-            TextRender.SetTransform(glm.ortho(0, ScreenSize.x, 0, ScreenSize.y, -1.0f, 100.0f).to_array());
+            TextRender.SetTransform(glm.ortho(0, screenSize.x, 0, screenSize.y, -1.0f, 100.0f).to_array());
 
             PlayerTest player = new PlayerTest(m_textures.PopResource("test"));
             m_entities.Add(player);
@@ -215,9 +232,9 @@ namespace OpenCSharp
             
             shader.Bind();
             shader.SetUniformMat4("u_ViewProj", camera.GetCamera().GetViewProjectionMatrixArray());
-            shader.SetUniformMat4("u_Transform", glm.ortho(0, ScreenSize.x, 0, ScreenSize.y, -1.0f, 100.0f).to_array());
+            shader.SetUniformMat4("u_Transform", glm.ortho(0, screenSize.x, 0, screenSize.y, -1.0f, 100.0f).to_array());
 
-            TextRender.SetTransform(glm.ortho(0, ScreenSize.x, 0, ScreenSize.y, -1.0f, 100.0f).to_array());
+            TextRender.SetTransform(glm.ortho(0, screenSize.x, 0, screenSize.y, -1.0f, 100.0f).to_array());
 
             if(gameState != GameState.Exit || gameState != GameState.Pause)
                 foreach (Entity en in m_entities)
@@ -229,7 +246,7 @@ namespace OpenCSharp
             if (keyboard.IsKeyDown(Keys.C))
                 currentMap = m_maps["1-2"];
             if (keyboard.IsKeyDown(Keys.U))
-                Console.WriteLine("Camera pos X: " + camera.GetCamera().GetPosition().x + " Y: " + camera.GetCamera().GetPosition().y);
+                Console.WriteLine("Camera pos X: " + camera.GetCamera().position.x + " Y: " + camera.GetCamera().position.y);
 
                 base.OnUpdateFrame(e);
         }
@@ -241,17 +258,18 @@ namespace OpenCSharp
             Render2D.BeginBatch();
 
             //Draws here
-
+            
             vec4[] colors = new vec4[4] {
-                 new vec4(1.0f),
-                 new vec4(0.2f,0.5f,0.8f,1.0f),
-                 new vec4(0.0f, 0.0f, 0.0f, 1.0f),
-                 new vec4(0.8f, 0.5f, 0.2f, 1.0f)
+                 new vec4(0.0f,0.6f, 0.9f,1.0f),
+                 new vec4(0.0f,0.6f, 0.9f,1.0f),
+                 new vec4(0.7f,0.9f,0.9f,1.0f),
+                 new vec4(0.7f,0.9f,0.9f,1.0f),
                 };
 
 
+            Render2D.DrawQuad(new vec2(0),new vec2(currentMap.Width * currentMap.TileSize, currentMap.Height * currentMap.TileSize), colors);
+            m_fonts["Arial"].RenderText("Oi teste", 10.0f, screenSize.y - 25.0f, 0.5f, new vec3(0.1f));
             currentMap.Draw();
-            Render2D.DrawQuad(new vec2(ScreenSize.x / 2, ScreenSize.y / 2), new vec2(50.0f), colors);
             foreach (Entity en in m_entities)
             {
                 if (en.DrawIt)

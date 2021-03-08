@@ -22,13 +22,14 @@ namespace OpenCSharp
     unsafe public class Map
     {
         public vec2 PlayerInitPos { get; protected set; }
-        public vec2 MapSize;
-        public Tile[,] TileMap;
-
+        public vec2 MapSize { get; protected set; }
+        public Tile[,] TileMap { get; protected set; }
+        public float TileSize { get; protected set; }
         public Map(uint w, uint h, string MapLayout, uint tileSize = 64)
         {
             TileMap = new Tile[w, h];
             MapSize = new vec2(w, h);
+            TileSize = tileSize;
             var A = Window.m_subTexs[SubTex.Invalid];
             var G = Window.m_subTexs[SubTex.Ground1];
             var W = Window.m_subTexs[SubTex.Wall1];
@@ -102,6 +103,14 @@ namespace OpenCSharp
             }
         }
 
+        public float Width
+        {
+            get => MapSize.x;
+        }
+        public float Height
+        {
+            get => MapSize.y;
+        }
         public Tile WhatIsHere(uint w, uint h)
         {
             return TileMap[w, h];

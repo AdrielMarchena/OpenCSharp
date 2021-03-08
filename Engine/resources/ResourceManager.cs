@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Engine.audio;
+using Engine.render;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace Engine.resources
 {
@@ -10,6 +14,10 @@ namespace Engine.resources
     /// <typeparam name="T"> Type </typeparam>
     public class ResourceManager<K, T>
     {
+        private const char Map = 'M';
+        private const char Sound = 'S';
+        private const char Image = 'I';
+
         private Dictionary<K, T> m_resource_list;
 
         public ResourceManager()
