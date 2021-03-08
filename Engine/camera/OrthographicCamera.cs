@@ -32,6 +32,11 @@ namespace Engine.camera
             m_ViewProjectionMatrix = m_ViewMatrix * m_ProjectionMatrix;
         }
 
+        public vec3 position
+        {
+            get => m_Position;
+            private set => m_Position = value;
+        }
         public vec3 GetPosition() 
         { 
             return m_Position;
@@ -40,6 +45,12 @@ namespace Engine.camera
         { 
             m_Position = position;
             RecalculateViewMatrix(); 
+        }
+
+        public float rotation
+        {
+            get => m_Rotation;
+            private set => m_Rotation = value;
         }
 
         public float GetRotation() 
