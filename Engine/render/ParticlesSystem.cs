@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenTK.Mathematics;
 using Engine.utils;
+using vtv = Engine.utils.Converter;
 using GlmNet;
 namespace Engine.render
 {
@@ -95,11 +96,18 @@ namespace Engine.render
                 // Fade away particles
                 float life = m_ParticlesPool[i].LifeRemaining / m_ParticlesPool[i].LifeTime;
                 Vector4 colorR = Vector4.Lerp(m_ParticlesPool[i].ColorBegin, m_ParticlesPool[i].ColorEnd, life);
-                
+
+                vec4[] colors = new vec4[4] {
+                 vtv.Vect4toVec4(m_ParticlesPool[i].ColorBegin),
+                 vtv.Vect4toVec4(colorR),
+                 vtv.Vect4toVec4(m_ParticlesPool[i].ColorEnd),
+                 vtv.Vect4toVec4(colorR)
+                };
+
                 colorR.W *= life;
                 
                 float size = MathHelper.Lerp(m_ParticlesPool[i].SizeEnd, m_ParticlesPool[i].SizeBegin, life);
-                Render2D.DrawQuad(m_ParticlesPool[i].Position, new vec2(size,size), MathHelper.DegreesToRadians(m_ParticlesPool[i].Rotation), new vec4(colorR.X, colorR.Y, colorR.Z, colorR.W), m_ParticlesPool[i].axisRot);
+                Render2D.DrawQuad(m_ParticlesPool[i].Position, new vec2(size,size), MathHelper.DegreesToRadians(m_ParticlesPool[i].Rotation), colors, m_ParticlesPool[i].axisRot);
         }
     }
 

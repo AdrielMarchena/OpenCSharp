@@ -31,6 +31,7 @@ namespace Engine.render
                 new vec2(1.0f,1.0f),
                 new vec2(0.0f,1.0f)
             };
+        static private TextureUnit t;
         struct Vertex
         {
             public vec3 Position;
@@ -141,6 +142,7 @@ namespace Engine.render
             GL.BufferSubData(BufferTarget.ArrayBuffer, (IntPtr)0, size, QuadBuffer);
         }
         
+        /*
         /// <summary>
         /// Switch case to get the enum TextureUnit
         /// </summary>
@@ -185,15 +187,17 @@ namespace Engine.render
                 default: return TextureUnit.Texture0;
             }
         }
+        */
 
         /// <summary>
         /// Draws all Quads prepared
         /// </summary>
         static public void Flush()
         {
-            for (UInt32 i = 0; i < TextureSlotIndex; i++)
+            for (Int32 i = 0; i < TextureSlotIndex; i++)
             {
-                GL.ActiveTexture(SwitchTexUnit(i));
+                GL.ActiveTexture(t.Add(i));
+                //GL.ActiveTexture((TextureUnit)((int)TextureUnit.Texture0 + i));
                 GL.BindTexture(TextureTarget.Texture2D,TextureSlots[i]);
             }
 

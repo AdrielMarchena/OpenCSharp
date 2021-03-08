@@ -28,6 +28,10 @@ namespace Engine.render
 
     public class Text
     {
+        /// <summary>
+        /// Dictionary of Caracters(struct)
+        /// <para>the key in the ascii of an char </para>
+        /// </summary>
         private readonly Dictionary<uint, Character> Characters;
         /// <summary>
         /// 65.0f is the default, above this the Gap gets bigger
@@ -77,13 +81,6 @@ namespace Engine.render
             library.Dispose();
         }
 
-        public void Dispose()
-        {
-            foreach(var d in Characters)
-            {
-                GL.DeleteTexture(d.Value.textureID);
-            }
-        }
 
         public void RenderText(string text,float x, float y, float scale,vec3 color)
         {
@@ -103,12 +100,19 @@ namespace Engine.render
                 float h = ch.size.y * scale;
                 
                 TextRender.DrawText(new vec2( xpos,ypos + h), new vec2( w,-h ) ,ch.textureID, color);
-                
+
                 // TODO: Do a decent bit shift and remove this Gap multiplication
                 c_Char += ((ch.Advance * Gap) >> 6) * scale;
             }
             TextRender.EndBatch();
             TextRender.Flush();
+        }
+        public void Dispose()
+        {
+            foreach(var d in Characters)
+            {
+                GL.DeleteTexture(d.Value.textureID);
+            }
         }
     }
 }

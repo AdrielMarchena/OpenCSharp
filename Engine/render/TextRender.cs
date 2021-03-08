@@ -27,6 +27,7 @@ namespace Engine.render
                 new vec2(1.0f,1.0f),
                 new vec2(0.0f,1.0f)
             };
+        static private readonly TextureUnit t;
         struct Vertex
         {
             public vec3 Position;
@@ -117,6 +118,8 @@ namespace Engine.render
             GL.BindBuffer(BufferTarget.ArrayBuffer, TextVB);
             GL.BufferSubData(BufferTarget.ArrayBuffer, (IntPtr)0, size, TextBuffer);
         }
+        
+        /*
         static private TextureUnit SwitchTexUnit(UInt32 index)
         {
             switch (index)
@@ -156,13 +159,15 @@ namespace Engine.render
                 default: return TextureUnit.Texture0;
             }
         }
+        */
         static public void Flush()
         {
             int lastShaderBinded = GL.GetInteger(GetPName.CurrentProgram);
             TextShader.Bind();
-            for (UInt32 i = 0; i < TextureSlotIndex; i++)
+            for (Int32 i = 0; i < TextureSlotIndex; i++)
             {
-                GL.ActiveTexture(SwitchTexUnit(i));
+                GL.ActiveTexture(t.Add(i));
+                //GL.ActiveTexture((TextureUnit)((int)TextureUnit.Texture0 + i));
                 GL.BindTexture(TextureTarget.Texture2D, TextureSlots[i]);
             }
 
@@ -339,83 +344,5 @@ namespace Engine.render
         {
             get => MaxTextures;
         }
-
-
-        /*static public void DrawQuad(vec2 position, vec2 size, SubTexture SubTexture)
-        {
-            if (IndexCount >= MaxTextIndexCount || TextureSlotIndex > MaxTextures - 1)
-            {
-                EndBatch();
-                Flush();
-                BeginBatch();
-            }
-
-            float textureIndex = 0.0f;
-
-            for (UInt32 i = 1; i < TextureSlotIndex; i++)
-            {
-                if (TextureSlots[i] == SubTexture.textureId)
-                {
-                    textureIndex = (float)i;
-                    break;
-                }
-            }
-
-            if (textureIndex == 0.0f)
-            {
-                textureIndex = (float)TextureSlotIndex;
-                TextureSlots[TextureSlotIndex] = SubTexture.textureId;
-                TextureSlotIndex++;
-            }
-
-            FillVertices(position, size, new vec4(1.0f, 1.0f, 1.0f, 1.0f), SubTexture.texCoord, textureIndex);
-            IndexCount += 6;
-        }
-        static public void DrawQuad(vec2 position, vec2 size, float rotation, SubTexture SubTexture, vec3? axis = null)
-        {
-            if (IndexCount >= MaxTextIndexCount || TextureSlotIndex > MaxTextures - 1)
-            {
-                EndBatch();
-                Flush();
-                BeginBatch();
-            }
-
-            float textureIndex = 0.0f;
-
-            for (UInt32 i = 1; i < TextureSlotIndex; i++)
-            {
-                if (TextureSlots[i] == SubTexture.textureId)
-                {
-                    textureIndex = (float)i;
-                    break;
-                }
-            }
-
-            if (textureIndex == 0.0f)
-            {
-                textureIndex = (float)TextureSlotIndex;
-                TextureSlots[TextureSlotIndex] = SubTexture.textureId;
-                TextureSlotIndex++;
-            }
-
-            vec3[] rectangleVertices = {
-                new vec3(position.x,position.y,0.0f),
-                new vec3(position.x + size.x,position.y,0.0f),
-                new vec3(position.x + size.x,position.y + size.y,0.0f),
-                new vec3(position.x,position.y + size.y,0.0f)
-            };
-            vec3 axiss;
-            if (axis != null)
-                axiss = (vec3)axis;
-            else
-                axiss = new vec3(0.0f, 0.0f, 1.0f);
-
-            RotateVertices(ref rectangleVertices, rotation, new vec3(position.x + (size.x / 2), position.y + (size.y / 2), 0.0f), axiss);
-
-            FillVertices(rectangleVertices, new vec4(1.0f, 1.0f, 1.0f, 1.0f), SubTexture.texCoord, textureIndex);
-            IndexCount += 6;
-        }*/
-
-
     }
 }
