@@ -1,5 +1,8 @@
 ﻿using GlmNet;
 using Engine.render;
+using System.IO;
+using System.Text;
+using System.Collections.Generic;
 
 namespace OpenCSharp
 {
@@ -15,13 +18,28 @@ namespace OpenCSharp
     public struct Tile
     {
         public bool IsSolid;
+        
+        /// <summary>
+        /// Tile entity, used to draw, have the position etc...
+        /// <para>(This is a entity just to reuse some code)</para>
+        /// </summary>
         public Entity Block;
+        
+        /// <summary>
+        /// Type of the Tile
+        /// </summary>
         public TileType Type;
+        
+        /// <summary>
+        /// Entitys inside a Tile
+        /// </summary>
+        public List<Entity> EntitysInside;
     }
 
-    unsafe public class Map
+    public class Map
     {
         public vec2 PlayerInitPos { get; protected set; }
+        public vec2 FinishXBoundery { get; protected set; }
         public vec2 MapSize { get; protected set; }
         public Tile[,] TileMap { get; protected set; }
         public float TileSize { get; protected set; }
@@ -55,6 +73,7 @@ namespace OpenCSharp
                                 Size = new vec2(tileSize)
                             };
                             TileMap[j, hI].Block = tmp;
+                            TileMap[j, hI].EntitysInside = new List<Entity>(5);
                         break;
                         case 'W':
                             TileMap[j, hI].IsSolid = true;
@@ -67,7 +86,8 @@ namespace OpenCSharp
                                 Size = new vec2(tileSize)
                             };
                             TileMap[j, hI].Block = tmp;
-                        break;
+                            TileMap[j, hI].EntitysInside = new List<Entity>(5);
+                            break;
                         case 'A':
 
                             TileMap[j, hI].IsSolid = false;
@@ -80,8 +100,8 @@ namespace OpenCSharp
                                 Size = new vec2(tileSize)
                             };
                             TileMap[j, hI].Block = tmp;
-
-                        break;
+                            TileMap[j, hI].EntitysInside = new List<Entity>(5);
+                            break;
                     }
                 }
                 hI++;
@@ -90,12 +110,13 @@ namespace OpenCSharp
         }
         public void Draw()
         {
-
             for (int i = 0; i < MapSize.y; i++)
             {
                 for (int j = 0; j < (int)MapSize.x; j++)
                 {
                     var tile = TileMap[j, i];
+                    tile.Block.TilePosition[0] = (uint)j;
+                    tile.Block.TilePosition[1] = (uint)i;
                     if (!tile.Block.DrawIt)
                         continue;
                     Render2D.DrawQuad(tile.Block.Position, tile.Block.Size, tile.Block.STexture);
@@ -111,20 +132,93 @@ namespace OpenCSharp
         {
             get => MapSize.y;
         }
-        public Tile WhatIsHere(uint w, uint h)
+        /// <summary>
+        /// Get the Tile in a Tile Position
+        /// </summary>
+        /// <param name="x">x Tile position</param>
+        /// <param name="y">y Tile position </param>
+        /// <returns></returns>
+        public ref Tile WhatIsHere(uint x, uint y)
         {
-            return TileMap[w, h];
+            if(x >= Width || x < 0 || y >= Height || y < 0)
+                return ref TileMap[0, 0];
+            return ref TileMap[x, y];
         }
 
-        public Tile this[uint w, uint h]
+        /// <summary>
+        /// Get a real position and return your TilePosition
+        /// </summary>
+        /// <param name="x">x position</param>
+        /// <param name="y">y position</param>
+        /// <returns></returns>
+        public vec2 GetTilePos(float x, float y)
         {
-            get { return TileMap[w,h]; }
-            protected set { TileMap[w,h] = value; }
+            int xx = 0;
+            int yy = 0;
+            for(int i = 0; i < Window.screenSize.x; i += (int)TileSize)
+            {
+                if (i < x)
+                    xx++;
+                else
+                    break;
+            }
+
+            for (int i = 0; i < Window.screenSize.y; i += (int)TileSize)
+            {
+                if (i < y)
+                    yy++;
+                else
+                    break;
+            }
+            return new vec2(xx, yy);
         }
 
+        /// <summary>
+        /// Sugar sintax, you can do like "Map[x,y] and get the same as calling WhatIsHere method"
+        /// </summary>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <returns>Tile</returns>
+        public ref Tile this[uint x, uint y]
+        {
+            get 
+            {
+                if (x >= Width || x < 0 || y >= Height || y < 0)
+                    return ref TileMap[0, 0];
+                return ref TileMap[x, y];
+            }
+        }
+
+        //TODO: do something with this
         public bool IsDone()
         {
             return false;
+        }
+
+        /// <summary>
+        /// Utility function to read a map from a text file
+        /// </summary>
+        /// <param name="path">Map file text</param>
+        /// <returns></returns>
+        static public string GetFromFile(string path)
+        {
+            try 
+            {
+                string tmp = "";
+                using (StreamReader reader = new StreamReader(path, Encoding.UTF8))
+                {
+                    tmp = reader.ReadToEnd();
+                }
+                return tmp;
+            }
+            catch (EndOfStreamException ex)
+            {
+                throw new System.Exception("Exception catch trying to read: " + path + "\n Catch: " + ex.Message);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception("Cold not read from: " + path + "\n Catch: " + ex.Message);
+            }
         }
 
     }

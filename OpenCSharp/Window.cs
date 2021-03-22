@@ -65,12 +65,16 @@ namespace OpenCSharp
         static public KeyboardState keyboard { get; protected set; }
 
         static public readonly ResourceManager<SubTex, SubTexture> m_subTexs = new ResourceManager<SubTex, SubTexture>();
+        static public readonly ResourceManager<int, SubTexture> m_player_idle = new ResourceManager<int, SubTexture>();
         static public readonly ResourceManager<string, Texture> m_textures = new ResourceManager<string, Texture>();
         static public readonly ResourceManager<string, Text> m_fonts = new ResourceManager<string, Text>();
         static public readonly ResourceManager<string, SoundPlayer> m_snds = new ResourceManager<string, SoundPlayer>();
         static public readonly ResourceManager<string, Map> m_maps = new ResourceManager<string, Map>();
         static public GameState gameState;
         
+        static public float m_updateTime { get; protected set; }
+        static public float m_renderTime { get; protected set; }
+
         /// <summary>
         /// Entity list,
         /// </summary>
@@ -84,7 +88,7 @@ namespace OpenCSharp
         /// <summary>
         /// The current Map
         /// </summary>
-        private Map currentMap;
+        static public Map currentMap { get; protected set; }
 
         /// <summary>
         /// Create all those SubTex from the TexMap
@@ -109,6 +113,16 @@ namespace OpenCSharp
                     i++;
                 }
             }
+
+            MapT = m_textures.GetResource("player_idle");
+            ImageSize = new vec2(MapT.Width, MapT.Height);
+            SpriteSize = new vec2(64);
+            for(int j = 0; j < 5; j++)
+            {
+                tmp = SubTexture.CreateFromCoords(MapT.textureID, ImageSize, new vec2(j, 0), SpriteSize);
+                m_player_idle[j] = tmp;
+            }
+
         }
         
         /// <summary>
@@ -118,6 +132,7 @@ namespace OpenCSharp
         {
             m_textures.AddResource("test", new Texture("tex/Test.png"));
             m_textures.AddResource("MapTextures", new Texture("tex/Map.png"));
+            m_textures.AddResource("player_idle", new Texture("tex/player_idle.png"));
 
             m_fonts.AddResource("Arial", new Text("fonts/arial.ttf"));
             //Play on My headphone, the default is 0
@@ -133,18 +148,28 @@ namespace OpenCSharp
             MontSubText();
             m_entities = new List<Entity>();
 
-            string layout = "AAAAAAAAAAAAAAAAAAAA" +
-                            "AAAAAAAAAAAAAAAAAAAA" +
-                            "AAAAAAAAAAAAAAAAAAAA" +
-                            "AAAAAAAAAAAAAAAAAAAW" +
-                            "WAAAAAAWWWWAAAAAAAAA" +
-                            "WAAAAAAAAAAAAAAAAAAA" +
-                            "WAAAAAAAAAAAAAAAAAAA" +
-                            "GGGGGGGGGGGGGGAAAGGG" +
-                            "GAAGGAAAAGGAAAAAAAAG" +
-                            "WGGGGGGGGGGGGGGGGGGG";
+            string layout = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+                            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+                            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+                            "AAAAAAAAAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAAW" +
+                            "WAAAAAAWWWWAAAAAAAAAWAAAAAAWWWWAAAAAAAAA" +
+                            "WAAAAAAAAAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAA" +
+                            "WAAAAAAAAAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAA" +
+                            "GGGGGGGGGGGGGGAAAGGGGGGGGGGGGGGGGGAAAGGG" +
+                            "GAAGGAAAAGGAAAAAAAAGGAAGGAAAAGGAAAAAAAAG" +
+                            "WGGGGGGGGGGGGGGGGGGGWGGGGGGGGGGGGGGGGGGG" +
+                            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+                            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+                            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+                            "AAAAAAAAAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAAW" +
+                            "WAAAAAAWWWWAAAAAAAAAWAAAAAAWWWWAAAAAAAAA" +
+                            "WAAAAAAAAAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAA" +
+                            "WAAAAAAAAAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAA" +
+                            "GGGGGGGGGGGGGGAAAGGGGGGGGGGGGGGGGGAAAGGG" +
+                            "GAAGGAAAAGGAAAAAAAAGGAAGGAAAAGGAAAAAAAAG" +
+                            "WGGGGGGGGGGGGGGGGGGGWGGGGGGGGGGGGGGGGGGG";
 
-            m_maps["1-1"] = new Map(20, 10, layout);
+            m_maps["1-1"] = new Map(40, 20, layout, 64u);
             currentMap = m_maps["1-1"];
 
             string layout2 = "AAAAAAAAAAAAAAAAAAAA" +
@@ -158,7 +183,7 @@ namespace OpenCSharp
                              "GGGGGGGGAAAGGGGGGGGG" +
                              "GGGGGGGGGGGGGGGGGGGG";
 
-            m_maps["1-2"] = new Map(20, 10, layout2);
+            m_maps["1-2"] = new Map(20, 10, layout2, 64u);
 
             gameState = GameState.Pause;
 
@@ -169,17 +194,37 @@ namespace OpenCSharp
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
-
-
-
+            foreach (Entity en in m_entities)
+                en.OnMouseDown(e);
             base.OnMouseDown(e);
+        }
+
+        protected override void OnKeyDown(KeyboardKeyEventArgs e)
+        {
+            foreach (Entity en in m_entities)
+                en.OnKeyDown(e);
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnMouseUp(MouseButtonEventArgs e)
+        {
+            foreach (Entity en in m_entities)
+                en.OnMouseUp(e);
+            base.OnMouseDown(e);
+        }
+
+        protected override void OnKeyUp(KeyboardKeyEventArgs e)
+        {
+            foreach (Entity en in m_entities)
+                en.OnKeyUp(e);
+            base.OnKeyDown(e);
         }
 
         protected override void OnResize(ResizeEventArgs e)
         {
             screenSize = new vec2(e.Width, e.Height);
             GL.Viewport(0, 0, e.Width, e.Height);
-            //camera.OnResize(e.Width, e.Height);
+            camera.OnResize(e.Width, e.Height);
             camera.OnResize(1, 1);
             base.OnResize(e);
         }
@@ -200,7 +245,7 @@ namespace OpenCSharp
             GL.Uniform1(loc, Render2D.MaxTextureUnits, samplers);
 
             Render2D.Init();
-            //TODO: Understand why this is the GetViewProjectionMatrix turn Quad's in Rectangles
+            //TODO: Understand why this is the GetViewProjectionMatrix turn Quad's in Rectangles (When the AspectRatio is not 1)
             shader.SetUniformMat4("u_ViewProj", camera.GetCamera().GetViewProjectionMatrixArray());
             shader.SetUniformMat4("u_Transform", glm.ortho(0,screenSize.x ,0,screenSize.y,-1.0f,100.0f).to_array());
             
@@ -224,6 +269,8 @@ namespace OpenCSharp
         {
             if(KeyboardState.IsKeyDown(Keys.Escape))
                 Close();
+
+            m_updateTime = (float)e.Time;
 
             mouse = MouseState;
             keyboard = KeyboardState;
@@ -253,6 +300,7 @@ namespace OpenCSharp
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
+            m_renderTime = (float)args.Time;
             GL.Clear(ClearBufferMask.ColorBufferBit);
             shader.Bind();
             Render2D.BeginBatch();
