@@ -42,6 +42,7 @@ namespace Engine.render
             public float TexIndex;
         }
 
+        static public bool PolygonMode;
         private Render2D() { }
 
         /// <summary>
@@ -49,7 +50,9 @@ namespace Engine.render
         /// </summary>
         static public void Init() 
         {
-            System.Console.WriteLine("Max texture units: " + MaxTextures);
+            Console.WriteLine("Max texture units: " + MaxTextures);
+
+            PolygonMode = false;
 
             if (QuadBuffer != null)
                 return;
@@ -204,6 +207,8 @@ namespace Engine.render
             }
 
             GL.BindVertexArray(QuadVA);
+            if (PolygonMode)
+                GL.PolygonMode(MaterialFace.FrontAndBack, OpenTK.Graphics.OpenGL.PolygonMode.Line);
             GL.DrawElements(BeginMode.Triangles, IndexCount, DrawElementsType.UnsignedInt, 0);
 
             IndexCount = 0;
@@ -685,6 +690,46 @@ namespace Engine.render
 
             FillVertices(rectangleVertices, new vec4(1.0f, 1.0f, 1.0f, 1.0f), SubTexture.texCoord, textureIndex);
             IndexCount += 6;
+        }
+        /// <summary>
+        /// Draw outlined quad
+        /// <para>Origin is the Left Corner</para>
+        /// <para>Up Right Down Left </para>
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="thick"></param>
+        /// <param name="color"></param>
+        static public void DrawLineQuad(vec2 position, vec2 size, float thick,vec4 color)
+        {
+            Render2D.DrawQuad(new vec2(position.x, position.y), new vec2(thick, size.y), color);
+            Render2D.DrawQuad(new vec2(position.x, position.y + size.y), new vec2(size.x, thick), color);
+            Render2D.DrawQuad(new vec2(position.x + size.x, position.y + size.y), new vec2(-thick, -size.y), color);
+            Render2D.DrawQuad(new vec2(position.x + size.x, position.y), new vec2(-size.x, -thick), color);
+        }
+        /// <summary>
+        /// Draw outlined quad (each line can be any color)
+        /// <para>Origin is the Left Corner</para>
+        /// <para>Up Right Down Left </para>
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="thick"></param>
+        /// <param name="color"></param>
+        static public void DrawLineQuad(vec2 position, vec2 size, float thick, vec4[] color)
+        {
+            Render2D.DrawQuad(new vec2(position.x, position.y), new vec2(thick, size.y), color[0]);
+            Render2D.DrawQuad(new vec2(position.x, position.y + size.y), new vec2(size.x, thick), color[1]);
+            Render2D.DrawQuad(new vec2(position.x + size.x, position.y + size.y), new vec2(-thick, -size.y), color[2]);
+            Render2D.DrawQuad(new vec2(position.x + size.x, position.y), new vec2(-size.x, -thick), color[3]);
+        }
+
+        static public void DrawLineQuad(vec2 position, vec2 size, float thick, vec4[][] color)
+        {
+            Render2D.DrawQuad(new vec2(position.x, position.y), new vec2(thick, size.y), color[0]);
+            Render2D.DrawQuad(new vec2(position.x, position.y + size.y), new vec2(size.x, thick), color[1]);
+            Render2D.DrawQuad(new vec2(position.x + size.x, position.y + size.y), new vec2(-thick, -size.y), color[2]);
+            Render2D.DrawQuad(new vec2(position.x + size.x, position.y), new vec2(-size.x, -thick), color[3]);
         }
 
         //Get's
