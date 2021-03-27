@@ -30,7 +30,7 @@ namespace OpenCSharp
 			m_entityList.AddRange(e);
 		}
 
-		static public void RectColision(Entity t, Entity f)
+		static public bool RectColision(Entity t, Entity f)
         {
 			float dx = ((t.x + t.w) / 2) - ((f.x + f.w) / 2);
 			float dy = ((t.y + t.h) / 2) - ((f.y + f.h) / 2);
@@ -47,12 +47,14 @@ namespace OpenCSharp
 						//Bottom
 						t.RectColisionNotification(f, RectSide.BOTTOM);
 						f.RectColisionNotification(t, RectSide.TOP);
+						return true;
 					}
 					else
 					{
 						//Left
 						t.RectColisionNotification(f, RectSide.LEFT);
 						f.RectColisionNotification(t, RectSide.RIGHT);
+						return true;
 					}
 				}
 				else
@@ -62,18 +64,21 @@ namespace OpenCSharp
 						//Right
 						t.RectColisionNotification(f, RectSide.RIGHT);
 						f.RectColisionNotification(t, RectSide.LEFT);
+						return true;
 					}
 					else
 					{
 						//Top
 						t.RectColisionNotification(f, RectSide.TOP);
 						f.RectColisionNotification(t, RectSide.BOTTOM);
+						return true;
 					}
 				}
 			else
             {
-				t.RectColisionNotification(f);
-				f.RectColisionNotification(t);
+				return false;
+				//t.RectColisionNotification(f);
+				//f.RectColisionNotification(t);
 			}
 		}
 

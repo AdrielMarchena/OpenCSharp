@@ -99,6 +99,10 @@ namespace OpenCSharp
         {
         }
 
+        public virtual void TileChanged(Tile newTile)
+        {
+        }
+
         /// <summary>
         /// Same as Position.x
         /// </summary>
@@ -132,6 +136,22 @@ namespace OpenCSharp
         {
             get => Size.y;
             set => Size.y = value;
+        }
+
+        /// <summary>
+        /// Return the mid x position (x + (w / 2))
+        /// </summary>
+        public float mx
+        {
+            get => x + (w / 2);
+        }
+
+        /// <summary>
+        /// Return the mid y position (y + (h / 2))
+        /// </summary>
+        public float my
+        {
+            get => y + (h / 2);
         }
 
         /*protected virtual void OnImGui()
@@ -169,22 +189,27 @@ namespace OpenCSharp
 
             //Add this entity on the current Tile and save on Entity which tile he is in
             ref Tile cT = ref Window.currentMap[TilePosition[0], TilePosition[1]];
-            if (cT.Type != TileType.INVALID)
-            {
-                if (this != null)
-                    cT.EntitysInside.Add(this);
-            }
 
-            // calculate new Tile position if Tile change
-            var newPos = Window.currentMap.GetTilePos(Position.x, Position.y);
+            // Get current tile position (from middle real position)
+            var newPos = Window.currentMap.GetTilePos(mx, my);
 
-            //If the Current tile change, set the new Tile position and delete this instance from the old tile
-            if (!newPos.Equals(cT))
+            //If the tile change, set the new Tile position and delete this instance from the old tile
+            if (TilePosition[0] != newPos.x || TilePosition[1] != newPos.y)
             {
                 TilePosition[0] = (uint)newPos.x;
                 TilePosition[1] = (uint)newPos.y;
+
                 //Remove Entity from previous Tile
                 cT.EntitysInside.Remove(this);
+
+                //Get current Tile and let's dive inside
+                cT = ref Window.currentMap[TilePosition[0], TilePosition[1]];
+                if (cT.Type != TileType.INVALID)
+                {
+                    if (this != null)
+                        cT.EntitysInside.Add(this);
+                }
+                TileChanged(cT);
             }
             
             base.OnUpdate(keyboard,e);

@@ -84,23 +84,47 @@ namespace OpenCSharp
 						continue;
 
 					currentTile = ref Window.currentMap.WhatIsHere(i, j);
-					currentTile.Block.STexture = Window.m_subTexs[SubTex.Item];
 
 
-					//First check colision with the Tile it self (if it's solid)
-					if (currentTile.IsSolid)
-						Colision.RectColision(this, currentTile.Block);
-					//Then loop through all Entitys inside that Tile
+					if (currentTile.Type == TileType.AIR)
+                    {
+						currentTile.Block.DrawIt = true;
+                    }
+					else if (currentTile.Type == TileType.INVALID)
+                    {
+                    }
+					else
+						currentTile.Block.STexture = Window.m_subTexs[SubTex.Item];
+
+
+
+					// Loop through all Entitys inside that Tile
 					foreach (Entity e in currentTile.EntitysInside)
                     {
-						Colision.RectColision(this, e);
+						//Skip colision with itself
+						if (this.Equals(e))
+							continue;
+						if(Colision.RectColision(this, e))
+							break;
                     }
-                }
+					// Check colision with the Tile it self (if it's solid)
+					if (currentTile.IsSolid)
+                    {
+						if (Colision.RectColision(this, currentTile.Block))
+							return;
+					}
+				}
             }
 
 		}
 
-        public override void OnUpdate(KeyboardState keyboard, FrameEventArgs e)
+		public override void TileChanged(Tile newTile)
+		{
+			System.Console.WriteLine("changed Tiles");
+			System.Console.WriteLine(Window.currentMap.GetTilePos(x, y));
+		}
+
+		public override void OnUpdate(KeyboardState keyboard, FrameEventArgs e)
         {
 			float deltaTime = (float)e.Time;
 			if (keyboard.IsKeyDown(Keys.Right))
@@ -158,7 +182,7 @@ namespace OpenCSharp
         }
 		public override void OnRender(FrameEventArgs args)
         {
-			//m_particleEmiter.OnRender();
+			m_particleEmiter.OnRender();
 
 			/*var st = m_animation.RunAnim((float)args.Time,0.5f);
 			if(st != null)
@@ -170,23 +194,22 @@ namespace OpenCSharp
 
         public override void RectColisionNotification(Entity cause, RectSide side = RectSide.NONE)
         {
-
 			switch(side)
             {
 				case RectSide.BOTTOM:
-					Position.y = cause.y + cause.h;
+					y = cause.y + cause.h + 0.01f;
 					Velocity.y = 0;
 					break;
 				case RectSide.TOP:
-					Position.y = cause.y;
+					y = cause.y - this.h + 0.01f;
 					Velocity.y = 0;
 					break;
 				case RectSide.LEFT:
-					Position.x = cause.x;
+					x = cause.x - this.w - 0.01f;
 					Velocity.x = 0;
 					break;
 				case RectSide.RIGHT:
-					Position.x = cause.x + cause.w;
+					x = cause.x + cause.w - 0.01f;
 					Velocity.x = 0;
 					break;
 			}

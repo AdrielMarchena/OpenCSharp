@@ -110,6 +110,8 @@ namespace OpenCSharp
         }
         public void Draw()
         {
+            //The entity inside Tiles dont Update
+            //Maybe add this later
             for (int i = 0; i < MapSize.y; i++)
             {
                 for (int j = 0; j < (int)MapSize.x; j++)
@@ -117,9 +119,15 @@ namespace OpenCSharp
                     var tile = TileMap[j, i];
                     tile.Block.TilePosition[0] = (uint)j;
                     tile.Block.TilePosition[1] = (uint)i;
-                    if (!tile.Block.DrawIt)
-                        continue;
-                    Render2D.DrawQuad(tile.Block.Position, tile.Block.Size, tile.Block.STexture);
+                    if (tile.Block.DrawIt && tile.Type != TileType.AIR)
+                        Render2D.DrawQuad(tile.Block.Position, tile.Block.Size, tile.Block.STexture);
+                    else
+                        if (tile.Type == TileType.AIR)
+                            if (tile.Block.DrawIt)
+                                {
+                                    Render2D.DrawQuad(tile.Block.Position, tile.Block.Size, new vec4(0.1f, 0.5f, 0.9f, 0.5f));
+                                    tile.Block.DrawIt = false;
+                                }
                 }
             }
         }
@@ -140,7 +148,7 @@ namespace OpenCSharp
         /// <returns></returns>
         public ref Tile WhatIsHere(uint x, uint y)
         {
-            if(x >= Width || x < 0 || y >= Height || y < 0)
+            if(x > Width || x < 0 || y > Height || y < 0)
                 return ref TileMap[0, 0];
             return ref TileMap[x, y];
         }
@@ -155,7 +163,7 @@ namespace OpenCSharp
         {
             int xx = 0;
             int yy = 0;
-            for(int i = 0; i < Window.screenSize.x; i += (int)TileSize)
+            for(int i = 0; i < Width * TileSize; i += (int)TileSize)
             {
                 if (i < x)
                     xx++;
@@ -163,7 +171,7 @@ namespace OpenCSharp
                     break;
             }
 
-            for (int i = 0; i < Window.screenSize.y; i += (int)TileSize)
+            for (int i = 0; i < Height * TileSize; i += (int)TileSize)
             {
                 if (i < y)
                     yy++;
@@ -183,7 +191,7 @@ namespace OpenCSharp
         {
             get 
             {
-                if (x >= Width || x < 0 || y >= Height || y < 0)
+                if (x >= Width-1 || x < 0 || y >= Height-1 || y < 0)
                     return ref TileMap[0, 0];
                 return ref TileMap[x, y];
             }

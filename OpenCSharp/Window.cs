@@ -136,7 +136,7 @@ namespace OpenCSharp
 
             m_fonts.AddResource("Arial", new Text("fonts/arial.ttf"));
             //Play on My headphone, the default is 0
-            mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[1]);
+            mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[0]);
             mPlayer.Volume = 2;
             m_snds.AddResource("music", mPlayer);
         }
@@ -170,7 +170,6 @@ namespace OpenCSharp
                             "WGGGGGGGGGGGGGGGGGGGWGGGGGGGGGGGGGGGGGGG";
 
             m_maps["1-1"] = new Map(40, 20, layout, 64u);
-            currentMap = m_maps["1-1"];
 
             string layout2 = "AAAAAAAAAAAAAAAAAAAA" +
                              "AAAAAAAAAAAAAAAAAAAA" +
@@ -178,12 +177,15 @@ namespace OpenCSharp
                              "AAAAAAAAAAAAAAAAAAAW" +
                              "WAAAAAAWWWWAAAAAAAAA" +
                              "WAAAAAAAAAAAAAAAAAAA" +
-                             "GGGGGGGGAAAAAAAAAAAA" +
-                             "GGGGGGGGGGGGGGAAAGGG" +
-                             "GGGGGGGGAAAGGGGGGGGG" +
-                             "GGGGGGGGGGGGGGGGGGGG";
+                             "AAAAAAAAAAAAAAAAAAAA" +
+                             "AAAAAAAAAAAAAAAAAAAA" +
+                             "AAAAAAAAAAAAAAAAAAAA" +
+                             "AAAAAAAAAAAAAAAAAAAA";
 
             m_maps["1-2"] = new Map(20, 10, layout2, 64u);
+
+            currentMap = m_maps["1-2"];
+
 
             gameState = GameState.Pause;
 
@@ -316,7 +318,7 @@ namespace OpenCSharp
 
 
             Render2D.DrawQuad(new vec2(0),new vec2(currentMap.Width * currentMap.TileSize, currentMap.Height * currentMap.TileSize), colors);
-            m_fonts["Arial"].RenderText("Oi teste", 10.0f, screenSize.y - 25.0f, 0.5f, new vec3(0.1f));
+            m_fonts["Arial"].RenderText("Oi teste", -10.0f, -screenSize.y + 25.0f, 0.5f, new vec3(0.1f));
             currentMap.Draw();
             foreach (Entity en in m_entities)
             {
@@ -325,6 +327,33 @@ namespace OpenCSharp
             }
             //vec2 PlayerPos = new vec2(1);
             //double Distance = Math.Sqrt(Math.Pow(PlayerPos.x - 50.0f,2) + Math.Pow(50.0f - PlayerPos.y,2));
+
+
+            vec4[] color1 =
+             {
+                new vec4(1),
+                new vec4(new vec3(0.5f),1f),
+                new vec4(new vec3(0.5f),1f),
+                new vec4(new vec3(0.3f),1f),
+            };
+
+            vec4[] color2 =
+             {
+                new vec4(1),
+                new vec4(new vec3(0.7f),1f),
+                new vec4(new vec3(0.1f),1f),
+                new vec4(new vec3(0.9f),1f),
+            };
+
+            vec4[][] Colors =
+            {
+                color1,
+                color2,
+                color2,
+                color1
+            };
+
+            Render2D.DrawLineQuad(new vec2(50), new vec2(50), 2 ,Colors);
 
             Render2D.EndBatch();
             Render2D.Flush();
