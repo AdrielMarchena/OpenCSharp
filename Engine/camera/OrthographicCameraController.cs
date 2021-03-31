@@ -6,6 +6,20 @@ namespace Engine.camera
     public class OrthographicCameraController
     {
 
+		public enum Direction : byte
+        {
+			RIGHT,
+			LEFT,
+			DOWN,
+			UP
+        }
+
+		public enum RotDirection : byte
+		{
+			RIGHT,
+			LEFT
+		}
+
 		private float m_AspectRatio;
 		private float m_ZoomLevel = 1.0f;
 		private OrthographicCamera m_Camera;
@@ -28,58 +42,89 @@ namespace Engine.camera
 			m_Rotation = rotation;
         }
 
+		public void Move(Direction direction,double deltaTime = 1)
+        {
+			switch(direction)
+            {
+				case Direction.LEFT:
+					m_CameraPosition.x -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y -= (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				break;
+				case Direction.RIGHT:
+					m_CameraPosition.x += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y += (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				break;
+				case Direction.UP:
+					m_CameraPosition.x += (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				break;
+				case Direction.DOWN:
+					m_CameraPosition.x -= (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+					m_CameraPosition.y -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
+				break;
+            }
+			m_Camera.SetPosition(new vec3(m_CameraPosition.x, m_CameraPosition.y, 0.0f));
+		}
+
+		public void RotateCamera(RotDirection direction,double deltaTime)
+        {
+			switch(direction)
+            {
+				case RotDirection.LEFT:
+					m_CameraRotation += m_CameraRotationSpeed * deltaTime;
+				break;
+				case RotDirection.RIGHT:
+					m_CameraRotation -= m_CameraRotationSpeed * deltaTime;
+				break;
+			}
+
+			if (m_CameraRotation > 180.0f)
+				m_CameraRotation -= 360.0f;
+			else if (m_CameraRotation <= -180.0f)
+				m_CameraRotation += 360.0f;
+			m_Camera.SetRotation((float)m_CameraRotation);
+
+		}
+
 		public void OnUpdate(KeyboardState keyboard,double deltaTime)
         {
 			if (keyboard.IsKeyDown(Keys.A))
 			{
 				if (m_CameraPosition.x > m_cameraBounds.x)
                 {
-					m_CameraPosition.x -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-					m_CameraPosition.y -= (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-
+					Move(Direction.LEFT,deltaTime);
                 }
 			}
 			else if (keyboard.IsKeyDown(Keys.D))
 			{
 				if(m_CameraPosition.x < m_cameraBounds.y)
                 {
-					m_CameraPosition.x += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-					m_CameraPosition.y += (float)(MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-                }
+					Move(Direction.RIGHT, deltaTime);
+				}
 			}
 
 			if (keyboard.IsKeyDown(Keys.W))
 			{
 				if (m_CameraPosition.y < m_cameraBounds.w)
                 {
-					m_CameraPosition.x += (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-					m_CameraPosition.y += (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-                }
+					Move(Direction.UP, deltaTime);
+				}
 			}
 			else if (keyboard.IsKeyDown(Keys.S))
 			{
 				if(m_CameraPosition.y > m_cameraBounds.z)
                 {
-					m_CameraPosition.x -= (float)(-MathHelper.Sin(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-					m_CameraPosition.y -= (float)(MathHelper.Cos(MathHelper.DegreesToRadians(m_CameraRotation)) * m_CameraTranslationSpeed * deltaTime);
-                }
+					Move(Direction.DOWN, deltaTime);
+				}
 			}
 
 			if (m_Rotation)
 			{
 				if (keyboard.IsKeyDown(Keys.Q))
-					m_CameraRotation += m_CameraRotationSpeed * deltaTime;
+					RotateCamera(RotDirection.LEFT, deltaTime);
 				if (keyboard.IsKeyDown(Keys.E))
-					m_CameraRotation -= m_CameraRotationSpeed * deltaTime;
-
-				if (m_CameraRotation > 180.0f)
-					m_CameraRotation -= 360.0f;
-				else if (m_CameraRotation <= -180.0f)
-					m_CameraRotation += 360.0f;
-
-				m_Camera.SetRotation((float)m_CameraRotation);
+					RotateCamera(RotDirection.RIGHT, deltaTime);
 			}
-			m_Camera.SetPosition(new vec3(m_CameraPosition.x, m_CameraPosition.y,0.0f));
 
 			m_CameraTranslationSpeed = m_ZoomLevel;
 		}
