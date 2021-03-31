@@ -1,7 +1,6 @@
 ﻿using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
-using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL;
 using Engine.render;
 using Engine.camera;
@@ -11,6 +10,7 @@ using GlmNet;
 using Engine;
 using Engine.resources;
 using Engine.audio;
+using Engine.utils;
 
 namespace OpenCSharp
 {
@@ -53,12 +53,12 @@ namespace OpenCSharp
         /// It's updated when the screen is resized
         /// </summary>
         static public vec2 screenSize { get; protected set; }
-        
+
         /// <summary>
         /// Mouse event, is updated each frame
         /// </summary>
         static public MouseState mouse { get; protected set; }
-        
+
         /// <summary>
         /// Keyboard events, is updated each frame
         /// </summary>
@@ -136,9 +136,16 @@ namespace OpenCSharp
 
             m_fonts.AddResource("Arial", new Text("fonts/arial.ttf"));
             //Play on My headphone, the default is 0
-            mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[0]);
-            mPlayer.Volume = 2;
-            m_snds.AddResource("music", mPlayer);
+            try
+            {
+                mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[0]);
+                mPlayer.Volume = 2;
+                m_snds.AddResource("music", mPlayer);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("No sound device was founded!, Error: " + e.Message);
+            }
         }
 
         public Window(GameWindowSettings gameWindowSettings,NativeWindowSettings nativeWindowSettings)
@@ -171,18 +178,18 @@ namespace OpenCSharp
 
             m_maps["1-1"] = new Map(40, 20, layout, 64u);
 
-            string layout2 = "AAAAAAAAAAAAAAAAAAAA" +
-                             "AAAAAAAAAAAAAAAAAAAA" +
-                             "AAAAAAAAAAAAAAAAAAAA" +
-                             "AAAAAAAAAAAAAAAAAAAW" +
-                             "WAAAAAAWWWWAAAAAAAAA" +
-                             "WAAAAAAAAAAAAAAAAAAA" +
-                             "AAAAAAAAAAAAAAAAAAAA" +
-                             "AAAAAAAAAAAAAAAAAAAA" +
-                             "AAAAAAAAAAAAAAAAAAAA" +
-                             "AAAAAAAAAAAAAAAAAAAA";
+            string layout2 = "WGGGGGGGGGGGGGGGGGGWAAAAA" +
+                             "WAAAAAAAAAAAAAAAAAAWAAAAA" +
+                             "WAAAAAAAAAAAAAAAAAAWAAAAA" +
+                             "WAAAAAAAWAAAAAAAAAAWAAAAA" +
+                             "WAAAAAAAAAAAAAAAAAAWAAAAA" +
+                             "WAAAAAAAAAAAAAAAAAAWAAAAA" +
+                             "WAAPAAAAAAAAWWWWWAWWAAAAA" +
+                             "WAAAAAAAAAAAAAAAAAWAAAAAA" +
+                             "GGGGGGGGGGGGGGGGGGGAAAAAA" +
+                             "GGGGGGGGGGGGGGGGGGGAAAAAA";
 
-            m_maps["1-2"] = new Map(20, 10, layout2, 64u);
+            m_maps["1-2"] = new Map(25, 10, layout2, 64u);
 
             currentMap = m_maps["1-2"];
 
@@ -289,26 +296,29 @@ namespace OpenCSharp
                 foreach (Entity en in m_entities)
                 {
                     if(en.UpdateIt)
-                        en.OnUpdate(KeyboardState,e);
+                        en.OnUpdate(keyboard,e);
                 }
-
-            if (keyboard.IsKeyDown(Keys.C))
-                currentMap = m_maps["1-2"];
-            if (keyboard.IsKeyDown(Keys.U))
-                Console.WriteLine("Camera pos X: " + camera.GetCamera().position.x + " Y: " + camera.GetCamera().position.y);
-
-                base.OnUpdateFrame(e);
+            #if DEBUG
+                if (keyboard.IsKeyDown(Keys.C))
+                    currentMap = m_maps["1-2"];
+                if (keyboard.IsKeyDown(Keys.U))
+                    Console.WriteLine("Camera pos X: " + camera.GetCamera().position.x + " Y: " + camera.GetCamera().position.y);
+            #endif
+            base.OnUpdateFrame(e);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             m_renderTime = (float)args.Time;
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            #if DEBUG
+                GL.Clear(ClearBufferMask.ColorBufferBit);
+            #endif
             shader.Bind();
             Render2D.BeginBatch();
 
             //Draws here
             
+            //Degrade for the backGround
             vec4[] colors = new vec4[4] {
                  new vec4(0.0f,0.6f, 0.9f,1.0f),
                  new vec4(0.0f,0.6f, 0.9f,1.0f),
@@ -316,47 +326,27 @@ namespace OpenCSharp
                  new vec4(0.7f,0.9f,0.9f,1.0f),
                 };
 
-
+            //backGround
             Render2D.DrawQuad(new vec2(0),new vec2(currentMap.Width * currentMap.TileSize, currentMap.Height * currentMap.TileSize), colors);
-            m_fonts["Arial"].RenderText("Oi teste", -10.0f, -screenSize.y + 25.0f, 0.5f, new vec3(0.1f));
-            currentMap.Draw();
+
+            currentMap.Draw(RenderTime);
+            
+            //Render2D.DrawQuad(new vec2(screenSize.x / 2, -screenSize.y), new vec2(2, screenSize.y * 2), new vec4(1.0f, 0.0f, 0.0f, 1.0f));
+            
+            //FIXME: this dosent render when the background render, problem: the background will be draw after this anyway
+            //m_fonts["Arial"].RenderText("Oi teste", screenSize.x / 2, screenSize.y / 2, 1.0f, new vec3(1.0f));
+            
             foreach (Entity en in m_entities)
             {
                 if (en.DrawIt)
                     en.OnRender(args);
             }
-            //vec2 PlayerPos = new vec2(1);
-            //double Distance = Math.Sqrt(Math.Pow(PlayerPos.x - 50.0f,2) + Math.Pow(50.0f - PlayerPos.y,2));
 
-
-            vec4[] color1 =
-             {
-                new vec4(1),
-                new vec4(new vec3(0.5f),1f),
-                new vec4(new vec3(0.5f),1f),
-                new vec4(new vec3(0.3f),1f),
-            };
-
-            vec4[] color2 =
-             {
-                new vec4(1),
-                new vec4(new vec3(0.7f),1f),
-                new vec4(new vec3(0.1f),1f),
-                new vec4(new vec3(0.9f),1f),
-            };
-
-            vec4[][] Colors =
-            {
-                color1,
-                color2,
-                color2,
-                color1
-            };
-
-            Render2D.DrawLineQuad(new vec2(50), new vec2(50), 2 ,Colors);
 
             Render2D.EndBatch();
             Render2D.Flush();
+
+            //TODO: add a List of lamdas to draw text after the normal batch
 
             Context.SwapBuffers();
             base.OnRenderFrame(args);
@@ -367,12 +357,12 @@ namespace OpenCSharp
             base.OnMouseWheel(e);
         }
 
-        protected void PushEntity(ref Entity ent)
+        public void PushEntity(ref Entity ent)
         {
             ent.OnAttach();
             m_entities.Add(ent);
         }
-        protected void PushEntity(ref Entity[] ent)
+        public void PushEntity(ref Entity[] ent)
         {
             foreach (Entity e in ent)
             {
@@ -388,5 +378,28 @@ namespace OpenCSharp
             TextRender.ShutDown();
             base.OnUnload();
         }
+
+        /// <summary>
+        /// Fix the y problem in mouse.Position
+        /// </summary>
+        /// <returns></returns>
+        static public vec2 MousePos
+        {
+            get => mouse_pos();
+        }
+        static private vec2 mouse_pos()
+        {
+            if (mouse == null)
+                return new vec2(0.0f);
+
+            vec2 mouse_pos = new vec2(mouse.Position.X, -(mouse.Position.Y - screenSize.y));
+            if (camera.GetCamera().position.x == 0 && camera.GetCamera().position.y == 0)
+                return mouse_pos;
+            else
+                //I don't know how, but this do the trick
+                return mouse_pos += camera.GetCamera().position.ToVec2() * screenSize.Divide(2);
+
+        }
+
     }
 }

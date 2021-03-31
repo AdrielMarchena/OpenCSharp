@@ -43,10 +43,14 @@ namespace OpenCSharp
         public vec2 MapSize { get; protected set; }
         public Tile[,] TileMap { get; protected set; }
         public float TileSize { get; protected set; }
-        public Map(uint w, uint h, string MapLayout, uint tileSize = 64)
+
+        public float Gravity { get; protected set; }
+
+        public Map(uint w, uint h, string MapLayout, uint tileSize = 64, float gravity = 9.8f)
         {
             TileMap = new Tile[w, h];
             MapSize = new vec2(w, h);
+            Gravity = gravity;
             TileSize = tileSize;
             var A = Window.m_subTexs[SubTex.Invalid];
             var G = Window.m_subTexs[SubTex.Ground1];
@@ -70,11 +74,15 @@ namespace OpenCSharp
                                 DrawIt = true,
                                 UpdateIt = true,
                                 Position = new vec2(j * tileSize, hI * tileSize),
-                                Size = new vec2(tileSize)
+                                Size = new vec2(tileSize),
+
                             };
                             TileMap[j, hI].Block = tmp;
+                            TileMap[j, hI].Block.TilePosition[0] = (uint)j;
+                            TileMap[j, hI].Block.TilePosition[1] = (uint)i;
                             TileMap[j, hI].EntitysInside = new List<Entity>(5);
-                        break;
+                            TileMap[j, hI].Block.OnAttach();
+                            break;
                         case 'W':
                             TileMap[j, hI].IsSolid = true;
                             TileMap[j, hI].Type = TileType.WALL;
@@ -87,6 +95,7 @@ namespace OpenCSharp
                             };
                             TileMap[j, hI].Block = tmp;
                             TileMap[j, hI].EntitysInside = new List<Entity>(5);
+                            TileMap[j, hI].Block.OnAttach();
                             break;
                         case 'A':
 
@@ -101,6 +110,22 @@ namespace OpenCSharp
                             };
                             TileMap[j, hI].Block = tmp;
                             TileMap[j, hI].EntitysInside = new List<Entity>(5);
+                            TileMap[j, hI].Block.OnAttach();
+                            break;
+                        case 'P':
+                            PlayerInitPos = new(j * TileSize, hI * TileSize);
+                            TileMap[j, hI].IsSolid = false;
+                            TileMap[j, hI].Type = TileType.AIR;
+                            tmp = new Entity(A)
+                            {
+                                DrawIt = false,
+                                UpdateIt = true,
+                                Position = new vec2(j * tileSize, hI * tileSize),
+                                Size = new vec2(tileSize)
+                            };
+                            TileMap[j, hI].Block = tmp;
+                            TileMap[j, hI].EntitysInside = new List<Entity>(5);
+                            TileMap[j, hI].Block.OnAttach();
                             break;
                     }
                 }
@@ -108,7 +133,8 @@ namespace OpenCSharp
                 lineh -= (int)w;
             }
         }
-        public void Draw()
+
+        public void Draw(double deltaTime)
         {
             //The entity inside Tiles dont Update
             //Maybe add this later
@@ -116,9 +142,9 @@ namespace OpenCSharp
             {
                 for (int j = 0; j < (int)MapSize.x; j++)
                 {
-                    var tile = TileMap[j, i];
-                    tile.Block.TilePosition[0] = (uint)j;
-                    tile.Block.TilePosition[1] = (uint)i;
+                    ref var tile = ref TileMap[j, i];
+                    
+                    //FIXME: this if's
                     if (tile.Block.DrawIt && tile.Type != TileType.AIR)
                         Render2D.DrawQuad(tile.Block.Position, tile.Block.Size, tile.Block.STexture);
                     else
@@ -165,7 +191,7 @@ namespace OpenCSharp
             int yy = 0;
             for(int i = 0; i < Width * TileSize; i += (int)TileSize)
             {
-                if (i < x)
+                if (i < x && i + TileSize <= x)
                     xx++;
                 else
                     break;
@@ -173,7 +199,7 @@ namespace OpenCSharp
 
             for (int i = 0; i < Height * TileSize; i += (int)TileSize)
             {
-                if (i < y)
+                if (i < y && i + TileSize <= y)
                     yy++;
                 else
                     break;
@@ -191,7 +217,7 @@ namespace OpenCSharp
         {
             get 
             {
-                if (x >= Width-1 || x < 0 || y >= Height-1 || y < 0)
+                if (x > Width-1 || x < 0 || y > Height-1 || y < 0)
                     return ref TileMap[0, 0];
                 return ref TileMap[x, y];
             }
