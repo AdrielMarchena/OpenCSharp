@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Engine.utils;
+using GlmNet;
 namespace OpenCSharp
 {
-	
-    class Colision
+    public class Colision
     {
 
         private List<Entity> m_entityList;
@@ -81,6 +81,77 @@ namespace OpenCSharp
 				//f.RectColisionNotification(t);
 			}
 		}
+
+		static public bool RectVsRect(Entity t, Entity f)
+        {
+			if (t.cx < f.cx + f.cw &&
+				t.cx + t.cw > f.cx &&
+				t.cy < f.cy + f.ch &&
+				t.cy + t.ch > f.cy)
+			{
+				t.RectColisionNotification(f);
+				f.RectColisionNotification(t);
+				return true;
+			}
+
+			return false;
+		}
+
+		static public bool PointVsRect(vec2 p, Entity r)
+        {
+			return (p.x >= r.cx && p.y >= r.cy && p.x < r.cx + r.cw && p.y < r.cy + r.ch);
+        }
+
+		static public bool RayVsRect(vec2 ray_origin, vec2 ray_dir, Rect target,ref vec2 contact_point, ref vec2 contact_normal, ref float t_hit_near)
+        {
+			vec2 t_near = (target.pos - ray_origin).Divide(ray_dir);
+			vec2 t_far = (target.pos + target.size - ray_origin).Divide(ray_dir);
+
+			if (float.IsNaN(t_far.y) || float.IsNaN(t_far.x)) return false;
+			if (float.IsNaN(t_near.y) || float.IsNaN(t_near.x)) return false;
+
+			if (t_near.x > t_far.x) Others.Swap(ref t_near.x, ref t_far.x);
+			if (t_near.y > t_far.y) Others.Swap(ref t_near.y, ref t_far.y);
+
+			if (t_near.x > t_far.y || t_near.y > t_far.x) return false;
+
+			t_hit_near = Math.Max(t_near.x, t_near.y);
+			float t_hit_far = Math.Min(t_far.x, t_far.y);
+
+			if (t_hit_far < 0) return false;
+
+			contact_point = ray_origin + t_hit_near * ray_dir;
+
+			if (t_near.x > t_near.y)
+				if (ray_dir.x < 0)
+					contact_normal = new vec2(1, 0);
+				else
+					contact_normal = new vec2(-1, 0);
+			else if (t_near.x < t_near.y)
+				if (ray_dir.y < 0)
+					contact_normal = new vec2(0, 1);
+				else
+					contact_normal = new vec2(0, -1);
+
+			return true;
+		}
+
+		static public bool DynamicRectVsRect(Entity moving, Rect target, ref vec2 contact_point, ref vec2 contact_normal, ref float contact_time, float deltaTime)
+        {
+			if (moving.Velocity.x == 0 && moving.Velocity.y == 0)
+				return false;
+
+			Rect expanded_target = new();
+			expanded_target.pos = target.pos - moving.CBox.size.Divide(2);
+			expanded_target.size = target.size + moving.CBox.size;
+
+			if(RayVsRect(moving.CBox.pos + moving.CBox.size.Divide(2), moving.Velocity * deltaTime, expanded_target, ref contact_point,ref contact_normal,ref contact_time))
+            {
+				if (contact_time >= 0.0f && contact_time <= 1.0f)
+					return true;
+            }
+			return false;
+        }
 
 		public int ResizeV
         {

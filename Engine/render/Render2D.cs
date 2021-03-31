@@ -727,9 +727,81 @@ namespace Engine.render
         static public void DrawLineQuad(vec2 position, vec2 size, float thick, vec4[][] color)
         {
             Render2D.DrawQuad(new vec2(position.x, position.y), new vec2(thick, size.y), color[0]);
-            Render2D.DrawQuad(new vec2(position.x, position.y + size.y), new vec2(size.x, thick), color[1]);
+            Render2D.DrawQuad(new vec2(position.x, position.y + size.y), new vec2(size.x, -thick), color[1]);
             Render2D.DrawQuad(new vec2(position.x + size.x, position.y + size.y), new vec2(-thick, -size.y), color[2]);
-            Render2D.DrawQuad(new vec2(position.x + size.x, position.y), new vec2(-size.x, -thick), color[3]);
+            Render2D.DrawQuad(new vec2(position.x + size.x, position.y), new vec2(-size.x, thick), color[3]);
+        }
+
+        static public void DrawLine(vec2 origin, vec2 dest, float thick, vec4 color)
+        {
+            //TODO: improve this method
+            if (IndexCount >= MaxIndexCount)
+            {
+                EndBatch();
+                Flush();
+                BeginBatch();
+            }
+
+            //RIGHT UP LEFT DOWN
+
+            //This check make the line make more sense
+            if((origin.x > dest.x && origin.y < dest.y) || (origin.x < dest.x && origin.y > dest.y))
+            {
+                QuadBuffer[QuadBufferPtr].Position = new(origin.x ,origin.y, 0);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[0];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+
+                QuadBuffer[QuadBufferPtr].Position = new(origin.x, origin.y + thick/2, 0);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[1];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+
+                QuadBuffer[QuadBufferPtr].Position = new(dest.x,dest.y, 0.0f);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[2];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+
+                QuadBuffer[QuadBufferPtr].Position = new(dest.x,dest.y - thick/2, 0.0f);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[3];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+                
+                IndexCount += 6;
+            }
+            else
+            if ((origin.x < dest.x && origin.y < dest.y) || (origin.x > dest.x && origin.y > dest.y))
+            {
+                QuadBuffer[QuadBufferPtr].Position = new(dest.x, dest.y, 0);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[0];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+
+                QuadBuffer[QuadBufferPtr].Position = new(dest.x, dest.y + thick / 2, 0);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[1];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+
+                QuadBuffer[QuadBufferPtr].Position = new(origin.x, origin.y, 0.0f);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[2];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+
+                QuadBuffer[QuadBufferPtr].Position = new(origin.x, origin.y - thick / 2, 0.0f);
+                QuadBuffer[QuadBufferPtr].Color = color;
+                QuadBuffer[QuadBufferPtr].TexCoords = TexCoords[3];
+                QuadBuffer[QuadBufferPtr].TexIndex = 0;
+                QuadBufferPtr++;
+
+                IndexCount += 6;
+            }
         }
 
         //Get's
