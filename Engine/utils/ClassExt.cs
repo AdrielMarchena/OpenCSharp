@@ -1,7 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
 using System.Linq;
-using Engine.utils;
+using GlmNet;
 namespace Engine.utils
 {
     public static class TextureUnitE
@@ -37,6 +37,37 @@ namespace Engine.utils
         {
             Resize(list, sz, new T());
         }
+    }
+
+    public static class VecEx
+    {
+        public static vec2 Divide(this vec2 a, vec2 b)
+        {
+            return new vec2(a.x / b.x, a.y / b.y);
+        }
+        public static vec2 Divide(this vec2 a, float b)
+        {
+            return new vec2(a.x / b, a.y / b);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="a"></param>
+        /// <returns>new vec2 with negated values</returns>
+        public static vec2 Neg(this vec2 a)
+        {
+            return new vec2(-a.x, -a.y);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="a"></param>
+        /// <returns>The x and y as a vec2</returns>
+        public static vec2 ToVec2(this vec3 a)
+        {
+            return new vec2(a.x, a.y);
+        }
+
     }
 
 }
