@@ -68,7 +68,7 @@ namespace OpenCSharp
         static public readonly ResourceManager<int, SubTexture> m_player_idle = new ResourceManager<int, SubTexture>();
         static public readonly ResourceManager<string, Texture> m_textures = new ResourceManager<string, Texture>();
         static public readonly ResourceManager<string, Text> m_fonts = new ResourceManager<string, Text>();
-        static public readonly ResourceManager<string, SoundPlayer> m_snds = new ResourceManager<string, SoundPlayer>();
+        // static public readonly ResourceManager<string, SoundPlayer> m_snds = new ResourceManager<string, SoundPlayer>();
         static public readonly ResourceManager<string, Map> m_maps = new ResourceManager<string, Map>();
         static public GameState gameState;
         
@@ -83,7 +83,7 @@ namespace OpenCSharp
         /// <summary>
         /// Player instance
         /// </summary>
-        static private readonly SoundPlayer mPlayer = new SoundPlayer();
+        // static private readonly SoundPlayer mPlayer = new SoundPlayer();
         
         /// <summary>
         /// The current Map
@@ -130,22 +130,22 @@ namespace OpenCSharp
         /// </summary>
         static private void Load_resources()
         {
-            m_textures.AddResource("test", new Texture("tex/Test.png"));
-            m_textures.AddResource("MapTextures", new Texture("tex/Map.png"));
-            m_textures.AddResource("player_idle", new Texture("tex/player_idle.png"));
+            m_textures.AddResource("test", new Texture("resources/tex/Test.png"));
+            m_textures.AddResource("MapTextures", new Texture("resources/tex/Map.png"));
+            m_textures.AddResource("player_idle", new Texture("resources/tex/player_idle.png"));
 
-            m_fonts.AddResource("Arial", new Text("fonts/arial.ttf"));
+            m_fonts.AddResource("Arial", new Text("resources/fonts/arial.ttf"));
             //Play on My headphone, the default is 0
-            try
-            {
-                mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[0]);
-                mPlayer.Volume = 2;
-                m_snds.AddResource("music", mPlayer);
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine("No sound device was founded!, Error: " + e.Message);
-            }
+            // try
+            // {
+            //     mPlayer.Open("snd/Requiem.mp3", SoundPlayer.Devices[0]);
+            //     mPlayer.Volume = 2;
+            //     m_snds.AddResource("music", mPlayer);
+            // }
+            // catch(Exception e)
+            // {
+            //     Console.WriteLine("No sound device was founded!, Error: " + e.Message);
+            // }
         }
 
         public Window(GameWindowSettings gameWindowSettings,NativeWindowSettings nativeWindowSettings)
@@ -243,7 +243,7 @@ namespace OpenCSharp
             float norm = 1.0f / 256.0f;
             GL.ClearColor(norm * 24.0f, norm * 24.0f, norm * 24.0f, 1.0f);
 
-            shader = new Shader("shader/shader.vert", "shader/shader.frag");
+            shader = new Shader("resources/shader/shader.vert", "resources/shader/shader.frag");
             shader.Bind();
 
             //Some stuff for textures Slots
@@ -373,7 +373,7 @@ namespace OpenCSharp
         protected override void OnUnload()
         {
             shader.Dispose();
-            mPlayer.Dispose();
+            // mPlayer.Dispose();
             Render2D.ShutDown();
             TextRender.ShutDown();
             base.OnUnload();

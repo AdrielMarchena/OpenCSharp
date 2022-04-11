@@ -11,7 +11,7 @@ namespace Engine.render
         private const Int32 MaxTextVertexCount = TextQuadCount * 4;
         private const Int32 MaxTextIndexCount = TextQuadCount * 6;
         static private readonly Int32 MaxTextures = GL.GetInteger(GetPName.MaxTextureImageUnits);
-        static private readonly Shader TextShader = new Shader("shader/text.vert", "shader/text.frag");
+        static private readonly Shader TextShader = new Shader("resources/shader/text.vert", "resources/shader/text.frag");
         static private Int32 TextVA = 0;
         static private Int32 TextVB = 0;
         static private Int32 TextIB = 0;
